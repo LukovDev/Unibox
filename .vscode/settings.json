@@ -1,0 +1,24 @@
+{
+    "C_Cpp.errorSquiggles": "disabled",
+    "files.associations": {
+        "*.cyt": "cython",
+        "sdl.h": "c",
+        "atomic": "c",
+        "type_traits": "c",
+        "xtr1common": "c",
+        "stdlib.h": "c",
+        "stddef.h": "c",
+        "cstddef": "c",
+        "cstdlib": "c",
+        "cstring": "c",
+        "ctime": "c",
+        "stdio.h": "c",
+        "errno.h": "c",
+        "corecrt.h": "c",
+        "stdint.h": "c",
+        "corecrt_search.h": "c",
+        "glad.h": "c",
+        "cglm.h": "c",
+        "input.h": "c"
+    }
+}
