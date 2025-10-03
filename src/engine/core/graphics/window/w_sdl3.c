@@ -142,7 +142,7 @@ Window* WindowSDL3_create(WinConfig *config, Renderer *renderer) {
     // Создаём систему ввода:
     Input *input = Input_create(
         Input_MouseState_create(8),
-        Input_KeyboardState_create(SDL_SCANCODE_COUNT),
+        Input_KeyboardState_create(INPUT_SCANCODE_COUNT),
         WindowSDL3_Impl_set_mouse_pos,
         WindowSDL3_Impl_set_mouse_visible
     );
