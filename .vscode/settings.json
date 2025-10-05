@@ -21,6 +21,7 @@
         "cglm.h": "c",
         "input.h": "c",
         "window.h": "c",
-        "mm.h": "c"
+        "mm.h": "c",
+        "float.h": "c"
     }
 }

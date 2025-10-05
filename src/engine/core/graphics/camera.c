@@ -42,7 +42,7 @@ Camera2D* Camera2D_create(Window *window, int width, int height, Vec2d position,
     // Матрица вида:
     glm_mat4_identity(camera->view);
     glm_translate(camera->view, (vec3){-camera->position.x, -camera->position.y, 0.0f});
-    glm_rotate(camera->view, camera->angle, (vec3){0, 0, 1.0f});
+    glm_rotate(camera->view, glm_rad(camera->angle), (vec3){0, 0, 1.0f});
     glm_scale(camera->view, (vec3){1.0f/camera->zoom, 1.0f/camera->zoom, 1.0f});
 
     // // Матрица проекции:
@@ -86,7 +86,7 @@ static void Camera2D_Impl_update(Camera2D *self) {
     } else {
         glm_scale(self->view, (vec3){0.0f, 0.0f, 1.0f});
     }
-    glm_rotate(self->view, self->angle, (vec3){0, 0, 1.0f});
+    glm_rotate(self->view, glm_rad(self->angle), (vec3){0, 0, 1.0f});
     glm_translate(self->view, (vec3){-self->position.x, -self->position.y, 0.0f});
 
     // Устанавливаем активную камеру:

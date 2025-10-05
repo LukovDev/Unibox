@@ -36,7 +36,7 @@ def main() -> None:
         result = subprocess.run([os.path.normpath(file_path), ' '.join(sys.argv[1:])]).returncode
         print(f"\nProcess returned: {result} <{hex(result)}>")
         print(f"Execution time: {round(time.time()-start_time, 4)}s")
-        if result in [3221225477]:
+        if result in [3221225477, -11]:
             print("Trying GDB debugger:\n")
             subprocess.run([
                 "gdb", file_path,

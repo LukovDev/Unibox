@@ -28,7 +28,7 @@ void start(Window *self) {
     }
     self->set_icon(self, image);
     Image_destroy(&image);
-    self->set_fps(self, 0);
+    self->set_fps(self, 60);
     self->set_vsync(self, false);
 
     camera = Camera2D_create(
@@ -131,8 +131,10 @@ void update(Window *self, Input *input, float dtime) {
     if (input->get_key_up(self)[K_f]) self->set_fullscreen(self, !self->get_fullscreen(self));
     if (input->get_key_up(self)[K_ESCAPE]) self->quit(self);
 
-    self->set_title(self, "x: %g, y: %g", camera->position.x, camera->position.y);
+    camera->angle = self->get_time(self) * 180.0;
+    self->set_title(self, "x: %f, y: %f", camera->position.x, camera->position.y);
 
+    camera->zoom -= input->get_mouse_scroll(self).y * 0.1f * camera->zoom;
     if (input->get_key_pressed(self)[K_w]) camera->position.y += 10.0f * dtime;
     if (input->get_key_pressed(self)[K_a]) camera->position.x -= 10.0f * dtime;
     if (input->get_key_pressed(self)[K_s]) camera->position.y -= 10.0f * dtime;
