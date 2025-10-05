@@ -140,7 +140,7 @@ void update(Window *self, Input *input, float dtime) {
 
 
 // Вызывается каждый кадр (отрисовка окна):
-void render(Window *self, Renderer *render, float dt) {
+void render(Window *self, Renderer *render, float dtime) {
     float t = self->get_time(self);
     float r = 0.5 + 0.5 * cosf(t + 0.0);
     float g = 0.5 + 0.5 * cosf(t + 2.0);

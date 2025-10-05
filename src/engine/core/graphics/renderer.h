@@ -33,5 +33,5 @@ typedef struct Renderer {
     void (*clear) (Renderer *self, float r, float g, float b, float a);  // Очистка окна.
     void (*camera2d_update) (Renderer *self);  // Обновляем данные матриц в шейдере по умолчанию для 2D камеры.
     void (*camera3d_update) (Renderer *self);  // Обновляем данные матриц в шейдере по умолчанию для 3D камеры.
-    void (*resize) (Renderer *self, int width, int height);  // Масштабируем окно.
+    void (*viewport_resize) (Renderer *self, int width, int height);  // Масштабируем область просмотра.
 } Renderer;

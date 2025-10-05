@@ -29,7 +29,7 @@ void start(Window *self) {
 
 
 // Вызывается каждый кадр (цикл окна):
-void update(Window *self, Input *input, float dt) {
+void update(Window *self, Input *input, float dtime) {
     printf("Update called. FPS %f\n", self->get_current_fps(self));
 
     // ...
@@ -40,7 +40,7 @@ void update(Window *self, Input *input, float dt) {
 
 
 // Вызывается каждый кадр (отрисовка окна):
-void render(Window *self, Renderer *render, float dt) {
+void render(Window *self, Renderer *render, float dtime) {
     float t = self->get_time(self);
     float r = 0.5 + 0.5 * cosf(t + 0.0);
     float g = 0.5 + 0.5 * cosf(t + 2.0);
