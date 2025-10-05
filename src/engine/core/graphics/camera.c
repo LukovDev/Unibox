@@ -100,7 +100,7 @@ static void Camera2D_Impl_update(Camera2D *self) {
 static void Camera2D_Impl_resize(Camera2D *self, int width, int height) {
     self->width = width;
     self->height = height;
-    self->window->renderer->resize(self->window->renderer, width, height);
+    self->window->renderer->viewport_resize(self->window->renderer, width, height);
 
     glm_mat4_identity(self->proj);
     float wdth = self->width/2.0f * self->meter/100.0f;
