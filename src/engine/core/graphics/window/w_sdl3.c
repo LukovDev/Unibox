@@ -23,6 +23,7 @@
 typedef struct WindowSDL3_Vars {
     SDL_Window *window;
     SDL_GLContext gl_context;
+    char title[1024];
     double start_time;
     double dtime;
     double dtime_old;
@@ -42,7 +43,7 @@ static inline WindowSDL3_Vars* WindowSDL3_GetVars(Window *self);
 static bool WindowSDL3_Impl_create(Window* self);
 static bool WindowSDL3_Impl_close(Window *self);
 static bool WindowSDL3_Impl_quit(Window *self);
-static void WindowSDL3_Impl_set_title(Window *self, const char *title);
+static void WindowSDL3_Impl_set_title(Window *self, const char *title, ...);
 static const char* WindowSDL3_Impl_get_title(Window *self);
 static void WindowSDL3_Impl_set_icon(Window *self, Image *image);
 static Image* WindowSDL3_Impl_get_icon(Window *self);
@@ -513,12 +514,17 @@ static bool WindowSDL3_Impl_quit(Window *self) {
 }
 
 
-static void WindowSDL3_Impl_set_title(Window *self, const char *title) {
+static void WindowSDL3_Impl_set_title(Window *self, const char *title, ...) {
     if (!self || !self->config) return;
     WindowSDL3_Vars *WinVars = WindowSDL3_GetVars(self);
     if (!WinVars || !WinVars->window) return;
-    SDL_SetWindowTitle(WinVars->window, title);
-    self->config->title = title;
+
+    va_list args;
+    va_start(args, title);
+    vsnprintf(WinVars->title, sizeof(WinVars->title), title, args);
+    va_end(args);
+    SDL_SetWindowTitle(WinVars->window, WinVars->title);
+    self->config->title = WinVars->title;
 }
 
 

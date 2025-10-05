@@ -71,8 +71,8 @@ typedef struct Window {
     bool (*close)  (Window *self);  // Вызовите для закрытия окна.
     bool (*quit)   (Window *self);  // Вызовите для полного завершения работы всех окон.
 
-    void        (*set_title) (Window *self, const char *title);  // Установить заголовок окна.
-    const char* (*get_title) (Window *self);                     // Получить заголовок окна.
+    void        (*set_title) (Window *self, const char *title, ...);  // Установить заголовок окна.
+    const char* (*get_title) (Window *self);                          // Получить заголовок окна.
 
     void   (*set_icon) (Window *self, Image *image);             // Установить иконку окна.
     Image* (*get_icon) (Window *self);                           // Получить иконку окна.

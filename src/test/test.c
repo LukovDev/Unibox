@@ -131,6 +131,8 @@ void update(Window *self, Input *input, float dtime) {
     if (input->get_key_up(self)[K_f]) self->set_fullscreen(self, !self->get_fullscreen(self));
     if (input->get_key_up(self)[K_ESCAPE]) self->quit(self);
 
+    self->set_title(self, "x: %g, y: %g", camera->position.x, camera->position.y);
+
     if (input->get_key_pressed(self)[K_w]) camera->position.y += 10.0f * dtime;
     if (input->get_key_pressed(self)[K_a]) camera->position.x -= 10.0f * dtime;
     if (input->get_key_pressed(self)[K_s]) camera->position.y -= 10.0f * dtime;
@@ -159,13 +161,6 @@ void render(Window *self, Renderer *render, float dtime) {
 void resize(Window *self, int width, int height) {
     printf("ReSize called. New W: %d, H: %d\n", width, height);
     camera->resize(camera, width, height);
-    // mat4 projection;
-    // glm_mat4_identity(projection);
-    // glm_ortho(-width, width, -height, height, -1.0, 1.0, projection);
-    printf("shader_program: %d\n", shader_program);
-    // GLint loc = glGetUniformLocation(shader_program, "u_projection");
-    // glUseProgram(shader_program);
-    // glUniformMatrix4fv(loc, 1, GL_FALSE, (float*)projection);
 }
 
 
