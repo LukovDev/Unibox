@@ -11,6 +11,7 @@
 #include <string.h>
 #include <SDL3/SDL.h>
 #include "../../mm/mm.h"
+#include "../../math.h"
 #include "../../input.h"
 #include "../renderer.h"
 #include "../renderer/r_gl.h"
@@ -220,8 +221,8 @@ static void WindowSDL3_MainLoop(Window *self, WinConfig *cfg) {
         Input *input = self->input;
 
         // Сброс состояний клавиатуры и мыши:
-        input->mouse->rel = (Input_Vec2i){0, 0};
-        input->mouse->scroll = (Input_Vec2i){0, 0};
+        input->mouse->rel = (Vec2i){0, 0};
+        input->mouse->scroll = (Vec2i){0, 0};
         memset(input->mouse->down, 0, input->mouse->max_keys * sizeof(bool));
         memset(input->mouse->up,   0, input->mouse->max_keys * sizeof(bool));
         memset(input->keyboard->down, 0, input->keyboard->max_keys * sizeof(bool));

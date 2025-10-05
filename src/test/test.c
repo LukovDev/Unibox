@@ -14,6 +14,7 @@
 
 GLuint VBO, VAO;
 GLuint shader_program;
+Camera2D *camera;
 
 
 // Вызывается после создания окна:
@@ -27,8 +28,13 @@ void start(Window *self) {
     }
     self->set_icon(self, image);
     Image_destroy(&image);
-    self->set_fps(self, 60);
+    self->set_fps(self, 0);
     self->set_vsync(self, false);
+
+    camera = Camera2D_create(
+        self, self->get_width(self), self->get_height(self),
+        (Vec2d){0.0, 0.0}, 0.0f, 0.01f
+    );
 
     const char* vertex_shader_src = fs_load_file("data/shaders/default.vert", "r");
     const char* fragment_shader_src = fs_load_file("data/shaders/default.frag", "r");
@@ -79,7 +85,7 @@ void start(Window *self) {
 
 
 // Вызывается каждый кадр (цикл окна):
-void update(Window *self, Input *input, float dt) {
+void update(Window *self, Input *input, float dtime) {
     printf("Update called. FPS %f\n", self->get_current_fps(self));
     if (self->get_is_focused(self)) {
         printf("Focused\n");
@@ -124,6 +130,12 @@ void update(Window *self, Input *input, float dt) {
 
     if (input->get_key_up(self)[K_f]) self->set_fullscreen(self, !self->get_fullscreen(self));
     if (input->get_key_up(self)[K_ESCAPE]) self->quit(self);
+
+    if (input->get_key_pressed(self)[K_w]) camera->position.y += 10.0f * dtime;
+    if (input->get_key_pressed(self)[K_a]) camera->position.x -= 10.0f * dtime;
+    if (input->get_key_pressed(self)[K_s]) camera->position.y -= 10.0f * dtime;
+    if (input->get_key_pressed(self)[K_d]) camera->position.x += 10.0f * dtime;
+    camera->update(camera);
 }
 
 
@@ -146,11 +158,11 @@ void render(Window *self, Renderer *render, float dt) {
 // Вызывается при изменении размера окна:
 void resize(Window *self, int width, int height) {
     printf("ReSize called. New W: %d, H: %d\n", width, height);
-    glViewport(0, 0, width, height);
+    camera->resize(camera, width, height);
     // mat4 projection;
     // glm_mat4_identity(projection);
     // glm_ortho(-width, width, -height, height, -1.0, 1.0, projection);
-
+    printf("shader_program: %d\n", shader_program);
     // GLint loc = glGetUniformLocation(shader_program, "u_projection");
     // glUseProgram(shader_program);
     // glUniformMatrix4fv(loc, 1, GL_FALSE, (float*)projection);
@@ -171,10 +183,11 @@ void hide(Window *self) {
 
 // Вызывается при закрытии окна:
 void destroy(Window *self) {
+    printf("Destroy called.\n");
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteProgram(shader_program);
-    printf("Destroy called.\n");
+    Camera2D_destroy(&camera);
 }
 
 
@@ -185,7 +198,8 @@ int main(int argc, char *argv[]) {
     Renderer *renderer = RendererGL_create(4, 1, true, RENDERER_GL_CORE);
     WinConfig *config = Window_create_config(start, update, render, resize, show, hide, destroy);
     Window *window = WindowSDL3_create(config, renderer);
-    config->fps = 100.0;
+    config->fps = 10.0;
+
     window->create(window);
 
     printf("(Before free) Memory used: %g kb (%zu b).\n", mm_get_used_size_kb(), mm_get_used_size());

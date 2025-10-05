@@ -11,18 +11,25 @@
 #include "../../mm/mm.h"
 #include "../renderer.h"
 #include "../gl.h"
+#include "../camera.h"
 #include "r_gl.h"
 
 
 // Объявление функций:
-static void RendererGL_Impl_init(Renderer *renderer);
-static void RendererGL_Impl_clear(Renderer *renderer, float r, float g, float b, float a);
+static void RendererGL_Impl_init(Renderer *self);
+static void RendererGL_Impl_clear(Renderer *self, float r, float g, float b, float a);
+static void RendererGL_Impl_camera2d_update(Renderer *self);
+static void RendererGL_Impl_camera3d_update(Renderer *self);
+static void RendererGL_Impl_resize(Renderer *self, int width, int height);
 
 
 // Регистрируем функции реализации апи:
-static void RendererGL_RegisterAPI(Renderer *renderer) {
-    renderer->init = RendererGL_Impl_init;
-    renderer->clear = RendererGL_Impl_clear;
+static void RendererGL_RegisterAPI(Renderer *self) {
+    self->init = RendererGL_Impl_init;
+    self->clear = RendererGL_Impl_clear;
+    self->camera2d_update = RendererGL_Impl_camera2d_update;
+    self->camera3d_update = RendererGL_Impl_camera3d_update;
+    self->resize = RendererGL_Impl_resize;
 }
 
 
@@ -44,6 +51,7 @@ Renderer* RendererGL_create(int major, int minor, bool doublebuffer, RendererGL_
     // Заполняем поля рендерера:
     renderer->name = "OpenGL";
     renderer->type = RENDERER_OPENGL;
+    renderer->camera = NULL;
     renderer->data = data;
 
     // Регистрируем функции:
@@ -54,25 +62,25 @@ Renderer* RendererGL_create(int major, int minor, bool doublebuffer, RendererGL_
 
 
 // Уничтожить рендерер:
-void RendererGL_destroy(Renderer **renderer) {
-    if (!renderer || !*renderer) return;
+void RendererGL_destroy(Renderer **self) {
+    if (!self || !*self) return;
 
     // Освобождаем память данных рендерера:
-    if ((*renderer)->data) {
-        mm_free((*renderer)->data);
-        (*renderer)->data = NULL;
+    if ((*self)->data) {
+        mm_free((*self)->data);
+        (*self)->data = NULL;
     }
 
     // Освободить память рендерера:
-    mm_free(*renderer);
-    *renderer = NULL;
+    mm_free(*self);
+    *self = NULL;
 }
 
 
 // Реализация API:
 
 
-static void RendererGL_Impl_init(Renderer *renderer) {
+static void RendererGL_Impl_init(Renderer *self) {
     if (!gladLoadGL()) {
         fprintf(stderr, "R_GL-FAIL: gladLoadGL failed.\n");
         exit(1);
@@ -93,8 +101,26 @@ static void RendererGL_Impl_init(Renderer *renderer) {
 }
 
 
-static void RendererGL_Impl_clear(Renderer *renderer, float r, float g, float b, float a) {
-    if (!renderer) return;
+static void RendererGL_Impl_clear(Renderer *self, float r, float g, float b, float a) {
+    if (!self) return;
     glClearColor(r, g, b, a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+
+static void RendererGL_Impl_camera2d_update(Renderer *self) {
+    glDisable(GL_DEPTH_TEST);
+    glUseProgram(3);
+    glUniformMatrix4fv(glGetUniformLocation(3, "u_view"), 1, GL_FALSE, (float*)((Camera2D*)self->camera)->view);
+    glUniformMatrix4fv(glGetUniformLocation(3, "u_projection"), 1, GL_FALSE, (float*)((Camera2D*)self->camera)->proj);
+}
+
+
+static void RendererGL_Impl_camera3d_update(Renderer *self) {
+    // ...
+}
+
+
+static void RendererGL_Impl_resize(Renderer *self, int width, int height) {
+    glViewport(0, 0, width, height);
 }

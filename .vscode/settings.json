@@ -19,6 +19,8 @@
         "corecrt_search.h": "c",
         "glad.h": "c",
         "cglm.h": "c",
-        "input.h": "c"
+        "input.h": "c",
+        "window.h": "c",
+        "mm.h": "c"
     }
 }

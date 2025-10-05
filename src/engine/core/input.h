@@ -8,6 +8,7 @@
 // Подключаем:
 #include <stdbool.h>
 #include <stdint.h>
+#include "math.h"
 
 
 // Независимые сканкоды:
@@ -143,30 +144,23 @@ typedef enum Input_Scancode {
 
 
 // Объявление структур:
-typedef struct Input_Vec2i Input_Vec2i;
 typedef struct Input_MouseState Input_MouseState;
 typedef struct Input_KeyboardState Input_KeyboardState;
 typedef struct Input Input;
 typedef struct Window Window;
 
 
-// Вектор двумерный целочисленный:
-typedef struct Input_Vec2i {
-    int x, y;
-} Input_Vec2i;
-
-
 // Состояние мыши:
 typedef struct Input_MouseState {
-    int max_keys;        // Количество кнопок (обычно равно 8 на каждый из полей состояний).
-    bool *pressed;       // Нажатые кнопки.
-    bool *down;          // Нажатия в этом кадре.
-    bool *up;            // Отпускания в этом кадре.
-    bool focused;        // Находится ли курсор над окном.
-    bool visible;        // Видимость курсора.
-    Input_Vec2i pos;     // Позиция курсора.
-    Input_Vec2i rel;     // Смещение за кадр.
-    Input_Vec2i scroll;  // Прокрутка колёсика мыши.
+    int max_keys;   // Количество кнопок (обычно равно 8 на каждый из полей состояний).
+    bool *pressed;  // Нажатые кнопки.
+    bool *down;     // Нажатия в этом кадре.
+    bool *up;       // Отпускания в этом кадре.
+    bool focused;   // Находится ли курсор над окном.
+    bool visible;   // Видимость курсора.
+    Vec2i pos;      // Позиция курсора.
+    Vec2i rel;      // Смещение за кадр.
+    Vec2i scroll;   // Прокрутка колёсика мыши.
 } Input_MouseState;
 
 
@@ -187,16 +181,16 @@ typedef struct Input {
     // -------------------------------- API ввода: --------------------------------
 
     // Мышь:
-    bool*       (*get_mouse_pressed) (Window *self);                // Получить нажатие кнопок мыши.
-    bool*       (*get_mouse_down)    (Window *self);                // Получить нажатие кнопки мыши.
-    bool*       (*get_mouse_up)      (Window *self);                // Получить отжатие кнопки мыши.
-    Input_Vec2i (*get_mouse_rel)     (Window *self);                // Получить смещение мыши за кадр.
-    bool        (*get_mouse_focused) (Window *self);                // Получить нахождение мыши над окном.
-    Input_Vec2i (*get_mouse_scroll)  (Window *self);                // Получить вращение колёсика мыши.
-    void        (*set_mouse_pos)     (Window *self, int x, int y);  // Установить позицию мыши.
-    Input_Vec2i (*get_mouse_pos)     (Window *self);                // Получить позицию мыши.
-    void        (*set_mouse_visible) (Window *self, bool visible);  // Установить видимость мыши.
-    bool        (*get_mouse_visible) (Window *self);                // Получить видимость мыши.
+    bool* (*get_mouse_pressed) (Window *self);                // Получить нажатие кнопок мыши.
+    bool* (*get_mouse_down)    (Window *self);                // Получить нажатие кнопки мыши.
+    bool* (*get_mouse_up)      (Window *self);                // Получить отжатие кнопки мыши.
+    Vec2i (*get_mouse_rel)     (Window *self);                // Получить смещение мыши за кадр.
+    bool  (*get_mouse_focused) (Window *self);                // Получить нахождение мыши над окном.
+    Vec2i (*get_mouse_scroll)  (Window *self);                // Получить вращение колёсика мыши.
+    void  (*set_mouse_pos)     (Window *self, int x, int y);  // Установить позицию мыши.
+    Vec2i (*get_mouse_pos)     (Window *self);                // Получить позицию мыши.
+    void  (*set_mouse_visible) (Window *self, bool visible);  // Установить видимость мыши.
+    bool  (*get_mouse_visible) (Window *self);                // Получить видимость мыши.
 
     // Клавиатура:
     bool* (*get_key_pressed) (Window *self);  // Получить нажатие клавиш клавиатуры.

@@ -33,4 +33,4 @@ typedef struct RendererGL_Data {
 Renderer* RendererGL_create(int major, int minor, bool doublebuffer, RendererGL_Profile profile);
 
 // Уничтожить рендерер:
-void RendererGL_destroy(Renderer **renderer);
+void RendererGL_destroy(Renderer **self);

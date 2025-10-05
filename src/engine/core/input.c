@@ -6,6 +6,7 @@
 // Подключаем:
 #include "mm/mm.h"
 #include "graphics/window.h"
+#include "math.h"
 #include "input.h"
 
 
@@ -13,10 +14,10 @@
 static bool* Input_Impl_get_mouse_pressed(Window *self);
 static bool* Input_Impl_get_mouse_down(Window *self);
 static bool* Input_Impl_get_mouse_up(Window *self);
-static Input_Vec2i Input_Impl_get_mouse_rel(Window *self);
+static Vec2i Input_Impl_get_mouse_rel(Window *self);
 static bool Input_Impl_get_mouse_focused(Window *self);
-static Input_Vec2i Input_Impl_get_mouse_scroll(Window *self);
-static Input_Vec2i Input_Impl_get_mouse_pos(Window *self);
+static Vec2i Input_Impl_get_mouse_scroll(Window *self);
+static Vec2i Input_Impl_get_mouse_pos(Window *self);
 static bool Input_Impl_get_mouse_visible(Window *self);
 static bool* Input_Impl_get_key_pressed(Window *self);
 static bool* Input_Impl_get_key_down(Window *self);
@@ -148,8 +149,8 @@ static bool* Input_Impl_get_mouse_up(Window *self) {
 }
 
 
-static Input_Vec2i Input_Impl_get_mouse_rel(Window *self) {
-    if (!self || !self->input || !self->input->mouse) return (Input_Vec2i){0, 0};
+static Vec2i Input_Impl_get_mouse_rel(Window *self) {
+    if (!self || !self->input || !self->input->mouse) return (Vec2i){0, 0};
     return self->input->mouse->rel;
 }
 
@@ -160,14 +161,14 @@ static bool Input_Impl_get_mouse_focused(Window *self) {
 }
 
 
-static Input_Vec2i Input_Impl_get_mouse_scroll(Window *self) {
-    if (!self || !self->input || !self->input->mouse) return (Input_Vec2i){0, 0};
+static Vec2i Input_Impl_get_mouse_scroll(Window *self) {
+    if (!self || !self->input || !self->input->mouse) return (Vec2i){0, 0};
     return self->input->mouse->scroll;
 }
 
 
-static Input_Vec2i Input_Impl_get_mouse_pos(Window *self) {
-    if (!self || !self->input || !self->input->mouse) return (Input_Vec2i){0, 0};
+static Vec2i Input_Impl_get_mouse_pos(Window *self) {
+    if (!self || !self->input || !self->input->mouse) return (Vec2i){0, 0};
     return self->input->mouse->pos;
 }
 

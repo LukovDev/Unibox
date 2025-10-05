@@ -11,16 +11,17 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdatomic.h>
 #include "mm.h"
 
 
 // Определения функций аллокатора которые используются в этой обертке (пока что используется базовый аллокатор):
-void* (*_m_alloc)   (size_t s)                         = malloc;
-void* (*_m_calloc)  (size_t c, size_t s)               = calloc;
-void* (*_m_realloc) (void *p, size_t s)                = realloc;
-void  (*_m_free)    (void *p)                          = free;
+void* (*_m_alloc)   (size_t s)           = malloc;
+void* (*_m_calloc)  (size_t c, size_t s) = calloc;
+void* (*_m_realloc) (void *p, size_t s)  = realloc;
+void  (*_m_free)    (void *p)            = free;
 
 
 // Сколько памяти используется в байтах:
@@ -28,27 +29,19 @@ static atomic_size_t mm_used_size = 0;
 
 
 // Получить сколько всего используется памяти в байтах этим менеджером памяти:
-size_t mm_get_used_size() {
-    return mm_used_size;
-}
+size_t mm_get_used_size() { return mm_used_size; }
 
 
 // Получить сколько всего используется памяти в килобайтах этим менеджером памяти:
-double mm_get_used_size_kb() {
-    return mm_get_used_size() / 1024.0;  // b -> kb.
-}
+double mm_get_used_size_kb() { return mm_get_used_size() / 1024.0; }  // b -> kb.
 
 
 // Получить сколько всего используется памяти в мегабайтах этим менеджером памяти:
-double mm_get_used_size_mb() {
-    return mm_get_used_size() / 1024.0 / 1024.0;  // b -> kb -> mb.
-}
+double mm_get_used_size_mb() { return mm_get_used_size() / 1024.0 / 1024.0; }  // b -> kb -> mb.
 
 
 // Получить сколько всего используется памяти в гигабайтах этим менеджером памяти:
-double mm_get_used_size_gb() {
-    return mm_get_used_size() / 1024.0 / 1024.0 / 1024.0;  // b -> kb -> mb -> gb.
-}
+double mm_get_used_size_gb() { return mm_get_used_size() / 1024.0 / 1024.0 / 1024.0; }  // b -> kb -> mb -> gb.
 
 
 // Получить размер блока в байтах:
