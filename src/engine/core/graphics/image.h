@@ -22,8 +22,8 @@ extern const int Image_default_icon_height;
 #define IMG_RGB  3
 #define IMG_RGBA 4
 
-// Типовая структура картинки:
-typedef struct {
+// Структура картинки:
+typedef struct Image {
     int width;
     int height;
     int channels;

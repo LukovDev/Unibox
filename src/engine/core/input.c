@@ -16,7 +16,7 @@ static bool* Input_Impl_get_mouse_down(Window *self);
 static bool* Input_Impl_get_mouse_up(Window *self);
 static Vec2i Input_Impl_get_mouse_rel(Window *self);
 static bool Input_Impl_get_mouse_focused(Window *self);
-static Vec2i Input_Impl_get_mouse_scroll(Window *self);
+static Vec2i Input_Impl_get_mouse_wheel(Window *self);
 static Vec2i Input_Impl_get_mouse_pos(Window *self);
 static bool Input_Impl_get_mouse_visible(Window *self);
 static bool* Input_Impl_get_key_pressed(Window *self);
@@ -105,7 +105,7 @@ Input* Input_create(
     input->get_mouse_up = Input_Impl_get_mouse_up;
     input->get_mouse_rel = Input_Impl_get_mouse_rel;
     input->get_mouse_focused = Input_Impl_get_mouse_focused;
-    input->get_mouse_scroll = Input_Impl_get_mouse_scroll;
+    input->get_mouse_wheel = Input_Impl_get_mouse_wheel;
     input->set_mouse_pos = set_mouse_pos;  // Функция зависит от реализации окна. Укажите сами.
     input->get_mouse_pos = Input_Impl_get_mouse_pos;
     input->set_mouse_visible = set_mouse_visible;  // Функция зависит от реализации окна. Укажите сами.
@@ -161,9 +161,9 @@ static bool Input_Impl_get_mouse_focused(Window *self) {
 }
 
 
-static Vec2i Input_Impl_get_mouse_scroll(Window *self) {
+static Vec2i Input_Impl_get_mouse_wheel(Window *self) {
     if (!self || !self->input || !self->input->mouse) return (Vec2i){0, 0};
-    return self->input->mouse->scroll;
+    return self->input->mouse->wheel;
 }
 
 

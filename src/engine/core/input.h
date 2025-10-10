@@ -160,7 +160,7 @@ typedef struct Input_MouseState {
     bool visible;   // Видимость курсора.
     Vec2i pos;      // Позиция курсора.
     Vec2i rel;      // Смещение за кадр.
-    Vec2i scroll;   // Прокрутка колёсика мыши.
+    Vec2i wheel;    // Прокрутка колёсика мыши.
 } Input_MouseState;
 
 
@@ -186,7 +186,7 @@ typedef struct Input {
     bool* (*get_mouse_up)      (Window *self);                // Получить отжатие кнопки мыши.
     Vec2i (*get_mouse_rel)     (Window *self);                // Получить смещение мыши за кадр.
     bool  (*get_mouse_focused) (Window *self);                // Получить нахождение мыши над окном.
-    Vec2i (*get_mouse_scroll)  (Window *self);                // Получить вращение колёсика мыши.
+    Vec2i (*get_mouse_wheel)   (Window *self);                // Получить вращение колёсика мыши.
     void  (*set_mouse_pos)     (Window *self, int x, int y);  // Установить позицию мыши.
     Vec2i (*get_mouse_pos)     (Window *self);                // Получить позицию мыши.
     void  (*set_mouse_visible) (Window *self, bool visible);  // Установить видимость мыши.

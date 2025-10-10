@@ -4,17 +4,13 @@
 
 
 // Подключаем:
-#include <stdio.h>
-#include <stdlib.h>
 #include <engine/engine.h>
 #include <engine/core/graphics/gl.h>
-#include <cglm/cglm.h>
-#include <math.h>
 
 
 GLuint VBO, VAO;
-GLuint shader_program;
 Camera2D *camera;
+ShaderProgram *shader;
 
 
 // Вызывается после создания окна:
@@ -28,7 +24,7 @@ void start(Window *self) {
     }
     self->set_icon(self, image);
     Image_destroy(&image);
-    self->set_fps(self, 60);
+    self->set_fps(self, 10);
     self->set_vsync(self, false);
 
     camera = Camera2D_create(
@@ -36,28 +32,24 @@ void start(Window *self) {
         (Vec2d){0.0, 0.0}, 0.0f, 0.01f
     );
 
+    // double start_time = Time_now(NULL);
+    // DArray *arr = DArray_create(0);
+    // for (int i=0; i<1024*1024*1024; i++)
+    //     DArray_push(arr, (void*)camera);
+    // DArray_clear(arr);
+    // DArray_shrink(arr);
+    // DArray_destroy(&arr);
+    // printf("Time: %f\n", Time_now(NULL)-start_time);
+
+
     const char* vertex_shader_src = fs_load_file("data/shaders/default.vert", "r");
     const char* fragment_shader_src = fs_load_file("data/shaders/default.frag", "r");
 
-    // Вершины треугольника
-    GLuint vertex = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex, 1, &vertex_shader_src, NULL);
-    glCompileShader(vertex);
-
-    GLuint fragment = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment, 1, &fragment_shader_src, NULL);
-    glCompileShader(fragment);
+    shader = ShaderProgram_create(self->renderer, vertex_shader_src, fragment_shader_src, NULL);
+    shader->compile(shader);
 
     mm_free((char*)vertex_shader_src);
     mm_free((char*)fragment_shader_src);
-
-    shader_program = glCreateProgram();
-    glAttachShader(shader_program, vertex);
-    glAttachShader(shader_program, fragment);
-    glLinkProgram(shader_program);
-
-    glDeleteShader(vertex);
-    glDeleteShader(fragment);
 
     // === Вершины треугольника ===
     float vertices[] = {
@@ -89,9 +81,11 @@ void update(Window *self, Input *input, float dtime) {
     printf("Update called. FPS %f\n", self->get_current_fps(self));
     if (self->get_is_focused(self)) {
         printf("Focused\n");
+        self->set_fps(self, 0);
     }
     if (self->get_is_defocused(self)) {
         printf("Defocused\n");
+        self->set_fps(self, 10);
     }
 
     if (false) {
@@ -119,7 +113,7 @@ void update(Window *self, Input *input, float dtime) {
         );
         printf("Mouse rel: X=%d, Y=%d\n", input->get_mouse_rel(self).x, input->get_mouse_rel(self).y);
         printf("Mouse focused: %s\n", input->get_mouse_focused(self) ? "true" : "false");
-        printf("Mouse scroll: X=%d, Y=%d\n", input->get_mouse_scroll(self).x, input->get_mouse_scroll(self).y);
+        printf("Mouse scroll: X=%d, Y=%d\n", input->get_mouse_wheel(self).x, input->get_mouse_wheel(self).y);
         printf("Mouse pos: X=%d, Y=%d\n", input->get_mouse_pos(self).x, input->get_mouse_pos(self).y);
         printf("Mouse visible: %s\n", input->get_mouse_visible(self) ? "true" : "false");
         printf("Key 1 pressed: %s\n", input->get_key_pressed(self)[K_UP] ? "true" : "false");
@@ -131,14 +125,27 @@ void update(Window *self, Input *input, float dtime) {
     if (input->get_key_up(self)[K_f]) self->set_fullscreen(self, !self->get_fullscreen(self));
     if (input->get_key_up(self)[K_ESCAPE]) self->quit(self);
 
-    camera->angle = self->get_time(self) * 180.0;
-    self->set_title(self, "x: %f, y: %f", camera->position.x, camera->position.y);
+    if (input->get_key_up(self)[K_1]) self->maximize(self);
+    if (input->get_key_up(self)[K_2]) self->minimize(self);
+    if (input->get_key_up(self)[K_3]) self->restore(self);
+    if (input->get_key_up(self)[K_4]) self->raise(self);
+    if (input->get_key_up(self)[K_5]) self->set_always_top(self, !self->get_always_top(self));
 
-    camera->zoom -= input->get_mouse_scroll(self).y * 0.1f * camera->zoom;
+    static int counter = 0;
+    if (counter++ % 100 == 0) self->raise(self);
+
+    self->set_title(self, "x: %g, y: %g", camera->position.x, camera->position.y);
+
+    camera->zoom -= input->get_mouse_wheel(self).y * camera->zoom * 0.1f;
     if (input->get_key_pressed(self)[K_w]) camera->position.y += 10.0f * dtime;
     if (input->get_key_pressed(self)[K_a]) camera->position.x -= 10.0f * dtime;
     if (input->get_key_pressed(self)[K_s]) camera->position.y -= 10.0f * dtime;
     if (input->get_key_pressed(self)[K_d]) camera->position.x += 10.0f * dtime;
+    if (input->get_mouse_pressed(self)[2]) {
+        camera->position.x -= input->get_mouse_rel(self).x * camera->zoom;
+        camera->position.y += input->get_mouse_rel(self).y * camera->zoom;
+    }
+
     camera->update(camera);
 }
 
@@ -149,11 +156,29 @@ void render(Window *self, Renderer *render, float dtime) {
     float r = 0.5 + 0.5 * cosf(t + 0.0);
     float g = 0.5 + 0.5 * cosf(t + 2.0);
     float b = 0.5 + 0.5 * cosf(t + 4.0);
-    render->clear(render, r, g, b, 1.0f);
+    render->clear(render, 0.0, 0.0, 0.0, 1.0f);
 
-    glUseProgram(shader_program);
+    mat4 model;
+    glm_mat4_identity(model);
+    glm_translate(model, (vec3){r, g, 0});
+    glm_rotate(model, glm_rad(g*360.0f), (vec3){0.0f, 1.0f, 0.0f});
+    glm_rotate(model, glm_rad(r*360.0f), (vec3){1.0f, 0.0f, 0.0f});
+    glm_rotate(model, glm_rad(b*360.0f), (vec3){0.0f, 0.0f, 1.0f});
+    shader->begin(shader);
+    shader->set_uniform_mat4(shader, "u_model", model);
+    shader->set_uniform_float(shader, "u_time", self->get_time(self));
+    shader->set_uniform_vec2(shader, "u_resolution", (Vec2f){self->get_width(self), self->get_height(self)});
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    glm_mat4_identity(model);
+    glm_translate(model, (vec3){b, -r, 0});
+    glm_rotate(model, glm_rad(b*360.0f), (vec3){0.0f, 1.0f, 0.0f});
+    glm_rotate(model, glm_rad(g*360.0f), (vec3){1.0f, 0.0f, 0.0f});
+    glm_rotate(model, glm_rad(r*360.0f), (vec3){0.0f, 0.0f, 1.0f});
+    shader->set_uniform_mat4(shader, "u_model", model);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    shader->end(shader);
 
     self->display(self);
 }
@@ -183,8 +208,9 @@ void destroy(Window *self) {
     printf("Destroy called.\n");
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteProgram(shader_program);
+    ShaderProgram_destroy(&shader);
     Camera2D_destroy(&camera);
+    printf("destroy done.\n");
 }
 
 
@@ -195,7 +221,6 @@ int main(int argc, char *argv[]) {
     Renderer *renderer = RendererGL_create(4, 1, true, RENDERER_GL_CORE);
     WinConfig *config = Window_create_config(start, update, render, resize, show, hide, destroy);
     Window *window = WindowSDL3_create(config, renderer);
-    config->fps = 10.0;
 
     window->create(window);
 

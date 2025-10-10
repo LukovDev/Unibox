@@ -22,6 +22,6 @@
         "input.h": "c",
         "window.h": "c",
         "mm.h": "c",
-        "float.h": "c"
+        "renderer.h": "c"
     }
 }

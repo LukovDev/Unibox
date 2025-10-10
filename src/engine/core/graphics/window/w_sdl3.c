@@ -13,6 +13,7 @@
 #include "../../mm/mm.h"
 #include "../../math.h"
 #include "../../input.h"
+#include "../image.h"
 #include "../renderer.h"
 #include "../renderer/r_gl.h"
 #include "../window.h"
@@ -38,6 +39,7 @@ typedef struct WindowSDL3_Vars {
 static void WindowSDL3_RegisterAPI(Window *window);
 static void WindowSDL3_MainLoop(Window *self, WinConfig *cfg);
 static void WindowSDL3_Log_err(const char *msg, ...);
+static void WindowSDL3_Closing_stage(Window *self);
 static inline WindowSDL3_Vars* WindowSDL3_GetVars(Window *self);
 
 static bool WindowSDL3_Impl_create(Window* self);
@@ -72,10 +74,16 @@ static void WindowSDL3_Impl_set_min_size(Window *self, int width, int height);
 static void WindowSDL3_Impl_get_min_size(Window *self, int *width, int *height);
 static void WindowSDL3_Impl_set_max_size(Window *self, int width, int height);
 static void WindowSDL3_Impl_get_max_size(Window *self, int *width, int *height);
+static void WindowSDL3_Impl_set_always_top(Window *self, bool on_top);
+static bool WindowSDL3_Impl_get_always_top(Window *self);
 static bool WindowSDL3_Impl_get_is_focused(Window *self);
 static bool WindowSDL3_Impl_get_is_defocused(Window *self);
 static uint32_t WindowSDL3_Impl_get_window_display_id(Window *self);
 static bool WindowSDL3_Impl_get_display_size(Window *self, uint32_t id, int *width, int *height);
+static void WindowSDL3_Impl_maximize(Window *self);
+static void WindowSDL3_Impl_minimize(Window *self);
+static void WindowSDL3_Impl_restore(Window *self);
+static void WindowSDL3_Impl_raise(Window *self);
 static float WindowSDL3_Impl_get_current_fps(Window *self);
 static double WindowSDL3_Impl_get_dtime(Window *self);
 static double WindowSDL3_Impl_get_time(Window *self);
@@ -121,10 +129,16 @@ static void WindowSDL3_RegisterAPI(Window *window) {
     window->get_min_size = WindowSDL3_Impl_get_min_size;
     window->set_max_size = WindowSDL3_Impl_set_max_size;
     window->get_max_size = WindowSDL3_Impl_get_max_size;
+    window->set_always_top = WindowSDL3_Impl_set_always_top;
+    window->get_always_top = WindowSDL3_Impl_get_always_top;
     window->get_is_focused = WindowSDL3_Impl_get_is_focused;
     window->get_is_defocused = WindowSDL3_Impl_get_is_defocused;
     window->get_window_display_id = WindowSDL3_Impl_get_window_display_id;
     window->get_display_size = WindowSDL3_Impl_get_display_size;
+    window->maximize = WindowSDL3_Impl_maximize;
+    window->minimize = WindowSDL3_Impl_minimize;
+    window->restore = WindowSDL3_Impl_restore;
+    window->raise = WindowSDL3_Impl_raise;
     window->get_current_fps = WindowSDL3_Impl_get_current_fps;
     window->get_dtime = WindowSDL3_Impl_get_dtime;
     window->get_time = WindowSDL3_Impl_get_time;
@@ -223,7 +237,7 @@ static void WindowSDL3_MainLoop(Window *self, WinConfig *cfg) {
 
         // Сброс состояний клавиатуры и мыши:
         input->mouse->rel = (Vec2i){0, 0};
-        input->mouse->scroll = (Vec2i){0, 0};
+        input->mouse->wheel = (Vec2i){0, 0};
         memset(input->mouse->down, 0, input->mouse->max_keys * sizeof(bool));
         memset(input->mouse->up,   0, input->mouse->max_keys * sizeof(bool));
         memset(input->keyboard->down, 0, input->keyboard->max_keys * sizeof(bool));
@@ -285,23 +299,23 @@ static void WindowSDL3_MainLoop(Window *self, WinConfig *cfg) {
 
                 // Если колёсико мыши провернулось:
                 case SDL_EVENT_MOUSE_WHEEL:
-                    input->mouse->scroll.x = event.wheel.x;
-                    input->mouse->scroll.y = event.wheel.y;
+                    input->mouse->wheel.x = event.wheel.x;
+                    input->mouse->wheel.y = event.wheel.y;
                     break;
 
                 // Если нажимают кнопку мыши:
                 case SDL_EVENT_MOUSE_BUTTON_DOWN:
                     if (event.button.button < input->mouse->max_keys) {
-                        input->mouse->pressed[event.button.button] = true;
-                        input->mouse->down[event.button.button] = true;
+                        input->mouse->pressed[event.button.button - 1] = true;
+                        input->mouse->down[event.button.button - 1] = true;
                     }
                     break;
 
                 // Если отпускают кнопку мыши:
                 case SDL_EVENT_MOUSE_BUTTON_UP:
                     if (event.button.button < input->mouse->max_keys) {
-                        input->mouse->pressed[event.button.button] = false;
-                        input->mouse->up[event.button.button] = true;
+                        input->mouse->pressed[event.button.button - 1] = false;
+                        input->mouse->up[event.button.button - 1] = true;
                     }
                     break;
 
@@ -330,9 +344,14 @@ static void WindowSDL3_MainLoop(Window *self, WinConfig *cfg) {
         }
 
         // Обработка основных функций (обновление и отрисовка):
-        if (WinVars->closing) break;  // Срабатывает если был вызван close().
         if (cfg->update) cfg->update(self, self->input, self->get_dtime(self));
         if (cfg->render) cfg->render(self, self->renderer, self->get_dtime(self));
+
+        // Проверяем что окно хотят закрыть:
+        if (WinVars->closing) {
+            WindowSDL3_Closing_stage(self);
+            return;
+        }
 
         // Делаем задержку между кадрами:
         if (!self->config->vsync && cfg->fps > 0) {
@@ -349,17 +368,37 @@ static void WindowSDL3_MainLoop(Window *self, WinConfig *cfg) {
 
 // Логирование ошибок:
 static void WindowSDL3_Log_err(const char *msg, ...) {
-    FILE *log_file = fopen("error-w_sdl3.log", "a");
     va_list args;
     va_start(args, msg);
     vfprintf(stderr, msg, args);
-
-    if (log_file) {
-        vfprintf(log_file, msg, args);
-        fprintf(log_file, "\n");
-        fclose(log_file);
-    }
+    fprintf(stderr, "\n");
     va_end(args);
+}
+
+
+static void WindowSDL3_Closing_stage(Window *self) {
+    if (!self || !self->config) return;
+    WindowSDL3_Vars *WinVars = WindowSDL3_GetVars(self);
+    if (!WinVars || !WinVars->window) return;
+
+    // Вызываем уничтожение:
+    if (self->config->destroy) {
+        self->config->destroy(self);
+    }
+
+    // Уничтожаем контекст рендеринга:
+    switch (self->renderer->type) {
+        case RENDERER_OPENGL:
+            if (WinVars->gl_context) { SDL_GL_DestroyContext(WinVars->gl_context); }
+            WinVars->gl_context = NULL;
+            break;
+
+        // Other renderers.
+    }
+
+    // Уничтожаем окно:
+    SDL_DestroyWindow(WinVars->window);
+    memset(WinVars, 0, sizeof(WindowSDL3_Vars));
 }
 
 
@@ -464,6 +503,7 @@ static bool WindowSDL3_Impl_create(Window *self) {
     self->set_fullscreen(self, cfg->fullscreen);
     self->set_min_size(self, cfg->min_width, cfg->min_height);
     self->set_max_size(self, cfg->max_width, cfg->max_height);
+    self->set_always_top(self, cfg->always_top);
     self->set_visible(self, cfg->visible);  // Применяем видимость только после применения других настроек.
 
     // Запускаем главный цикл:
@@ -478,26 +518,7 @@ static bool WindowSDL3_Impl_close(Window *self) {
     WindowSDL3_Vars *WinVars = WindowSDL3_GetVars(self);
     if (!WinVars || !WinVars->window) return false;
 
-    // Вызываем уничтожение:
-    if (self->config->destroy) {
-        self->config->destroy(self);
-    }
-
-    // Уничтожаем контекст рендеринга:
-    switch (self->renderer->type) {
-        case RENDERER_OPENGL:
-            if (WinVars->gl_context) { SDL_GL_DestroyContext(WinVars->gl_context); }
-            WinVars->gl_context = NULL;
-            break;
-
-        // Other renderers.
-    }
-
-    // Уничтожаем окно:
-    SDL_DestroyWindow(WinVars->window);
-    memset(WinVars, 0, sizeof(WindowSDL3_Vars));
     WinVars->closing = true;
-
     return true;
 }
 
@@ -789,6 +810,21 @@ static void WindowSDL3_Impl_get_max_size(Window *self, int *width, int *height) 
 }
 
 
+static void WindowSDL3_Impl_set_always_top(Window *self, bool on_top) {
+    if (!self || !self->config) return;
+    WindowSDL3_Vars *WinVars = WindowSDL3_GetVars(self);
+    if (!WinVars || !WinVars->window) return;
+    SDL_SetWindowAlwaysOnTop(WinVars->window, on_top);
+    self->config->always_top = on_top;
+}
+
+
+static bool WindowSDL3_Impl_get_always_top(Window *self) {
+    if (!self || !self->config) return false;
+    return self->config->always_top;
+}
+
+
 static bool WindowSDL3_Impl_get_is_focused(Window *self) {
     if (!self) return false;
     WindowSDL3_Vars *WinVars = WindowSDL3_GetVars(self);
@@ -820,6 +856,38 @@ static bool WindowSDL3_Impl_get_display_size(Window *self, uint32_t id, int *wid
     *width = rect.w;
     *height = rect.h;
     return true;
+}
+
+
+static void WindowSDL3_Impl_maximize(Window *self) {
+    if (!self) return;
+    WindowSDL3_Vars *WinVars = WindowSDL3_GetVars(self);
+    if (!WinVars || !WinVars->window) return;
+    SDL_MaximizeWindow(WinVars->window);
+}
+
+
+static void WindowSDL3_Impl_minimize(Window *self) {
+    if (!self) return;
+    WindowSDL3_Vars *WinVars = WindowSDL3_GetVars(self);
+    if (!WinVars || !WinVars->window) return;
+    SDL_MinimizeWindow(WinVars->window);
+}
+
+
+static void WindowSDL3_Impl_restore(Window *self) {
+    if (!self) return;
+    WindowSDL3_Vars *WinVars = WindowSDL3_GetVars(self);
+    if (!WinVars || !WinVars->window) return;
+    SDL_RestoreWindow(WinVars->window);
+}
+
+
+static void WindowSDL3_Impl_raise(Window *self) {
+    if (!self) return;
+    WindowSDL3_Vars *WinVars = WindowSDL3_GetVars(self);
+    if (!WinVars || !WinVars->window) return;
+    SDL_RaiseWindow(WinVars->window);
 }
 
 

@@ -6,7 +6,7 @@
 
 
 // Подключаем:
-#include <math.h>
+#include "std.h"
 #include <cglm/cglm.h>
 
 

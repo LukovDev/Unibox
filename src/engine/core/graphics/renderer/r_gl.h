@@ -6,6 +6,7 @@
 
 
 // Подключаем:
+#include <stdbool.h>
 #include "../renderer.h"
 
 
@@ -18,6 +19,7 @@ typedef enum RendererGL_Profile {
 
 // Объявление структур:
 typedef struct RendererGL_Data RendererGL_Data;
+typedef struct ShaderProgram ShaderProgram;
 
 
 // Структура данных рендерера:
@@ -27,6 +29,10 @@ typedef struct RendererGL_Data {
     bool doublebuffer;
     RendererGL_Profile profile;
 } RendererGL_Data;
+
+
+// Регистрируем функции реализации апи для шейдера:
+void RendererGL_RegisterShaderProgramAPI(ShaderProgram *shader);
 
 
 // Создать рендерер:

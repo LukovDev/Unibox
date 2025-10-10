@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include "../mm/mm.h"
 #include "../input.h"
+#include "image.h"
 #include "renderer.h"
 #include "window.h"
 
@@ -38,6 +39,7 @@ WinConfig* Window_create_config(
     config->titlebar = true;
     config->resizable = true;
     config->fullscreen = false;
+    config->always_top = false;
     config->min_width = 0;
     config->min_height = 0;
     config->max_width = 0;

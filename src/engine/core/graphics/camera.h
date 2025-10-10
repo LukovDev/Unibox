@@ -7,11 +7,11 @@
 
 // Подключаем:
 #include "../math.h"
-#include "window.h"
 
 
 // Объявление структур:
 typedef struct Camera2D Camera2D;
+typedef struct Window Window;
 
 
 // Структура 2D камеры:

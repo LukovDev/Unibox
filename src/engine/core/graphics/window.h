@@ -8,13 +8,13 @@
 // Подключаем:
 #include <stdbool.h>
 #include <stdint.h>
-#include "image.h"
 
 
 // Объявление структур:
 typedef struct Window Window;
 typedef struct WinConfig WinConfig;
 typedef struct Input Input;
+typedef struct Image Image;
 typedef struct Renderer Renderer;
 
 
@@ -115,6 +115,9 @@ typedef struct Window {
     void (*set_max_size) (Window *self, int width, int height);    // Установить макс. размер окна.
     void (*get_max_size) (Window *self, int *width, int *height);  // Получить макс. размер окна.
 
+    void (*set_always_top) (Window *self, bool on_top);  // Установить всегда на переднем плане или нет.
+    bool (*get_always_top) (Window *self);               // Получить всегда на переднем плане или нет.
+
     bool (*get_is_focused)   (Window *self);  // Получить фокус окна.
     bool (*get_is_defocused) (Window *self);  // Получить расфокус окна.
 
@@ -122,11 +125,14 @@ typedef struct Window {
 
     bool (*get_display_size) (Window *self, uint32_t id, int *width, int *height);  // Получить размер дисплея.
 
-    float (*get_current_fps) (Window *self);  // Получить текущий фпс.
+    void (*maximize) (Window *self);  // Развернуть окно на весь экран.
+    void (*minimize) (Window *self);  // Свернуть окно в панель задач.
+    void (*restore)  (Window *self);  // Восстановить обычное состояние окна.
+    void (*raise)    (Window *self);  // Перенести окно на передний план.
 
-    double (*get_dtime) (Window *self);  // Получить дельту времени.
-
-    double (*get_time) (Window *self);  // Получить время со старта окна.
+    float  (*get_current_fps) (Window *self);  // Получить текущий фпс.
+    double (*get_dtime)       (Window *self);  // Получить дельту времени.
+    double (*get_time)        (Window *self);  // Получить время со старта окна.
 
     void (*display) (Window *self);  // Отрисовка содержимого окна.
 } Window;
@@ -142,6 +148,7 @@ typedef struct WinConfig {
     bool titlebar;      // Видимость заголовка окна.
     bool resizable;     // Масштабируемость окна.
     bool fullscreen;    // Полноэкранный режим.
+    bool always_top;    // Всегда на переднем плане.
 
     union {
         int size[2];  // Размер окна.
