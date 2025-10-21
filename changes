@@ -1,0 +1,9 @@
+добавлено:
+
+- В Window API было добавлено 6 новых функций:
+    - set_always_top()
+    - get_always_top()
+    - maximize()
+    - minimize()
+    - restore()
+    - raise()

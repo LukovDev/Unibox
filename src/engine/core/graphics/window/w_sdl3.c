@@ -94,7 +94,6 @@ static void WindowSDL3_Impl_set_mouse_pos(Window *self, int x, int y);
 static void WindowSDL3_Impl_set_mouse_visible(Window *self, bool visible);
 
 
-
 // Регистрируем функции реализации апи:
 static void WindowSDL3_RegisterAPI(Window *window) {
     window->create = WindowSDL3_Impl_create;
