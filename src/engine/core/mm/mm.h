@@ -40,6 +40,9 @@ void* mm_calloc(size_t count, size_t size);
 // Расширение блока памяти:
 void* mm_realloc(void *ptr, size_t new_size);
 
+// Копирование строки:
+char* mm_strdup(const char *str);
+
 // Освобождение памяти:
 void mm_free(void *ptr);
 

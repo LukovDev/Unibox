@@ -6,7 +6,9 @@
 
 
 // Подключаем:
+#include <stdio.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 
 // Определения:
@@ -45,6 +47,12 @@ void DArray_insert(DArray *arr, size_t index, void *element);
 
 // Переворот массива:
 void DArray_reverse(DArray *arr);
+
+// Печать содержимого массива:
+void DArray_print(DArray *arr, FILE *out, bool int_mode);
+
+// Получить длину массива:
+size_t DArray_len(DArray *arr);
 
 // Удаление элемента со сдвигом:
 // ВНИМАНИЕ: Удаление указателя из массива не удаляет сам блок памяти! Освобождай вручную!

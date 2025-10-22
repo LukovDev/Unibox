@@ -4,7 +4,9 @@
 
 
 // Подключаем:
+#include <stdio.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include <string.h>
 #include "mm/mm.h"
 #include "darray.h"
@@ -128,6 +130,33 @@ void DArray_reverse(DArray *arr) {
 }
 
 
+// Печать содержимого массива:
+void DArray_print(DArray *arr, FILE *out, bool int_mode) {
+    if (!arr) return;
+    if (!out) out = stdout;
+
+    fprintf(out, "[");
+    for (size_t i=0; i < arr->len; i++) {
+        if (int_mode) {
+            fprintf(out, "%zu", (size_t)arr->data[i]);
+        } else {
+            fprintf(out, "0x%p", arr->data[i]);
+        }
+        if (i < arr->len-1) {
+            fprintf(out, ", ");
+        }
+    }
+    fprintf(out, "]\n");
+}
+
+
+// Получить длину массива:
+size_t DArray_len(DArray *arr) {
+    if (!arr) return 0;
+    return arr->len;
+}
+
+
 // Удаление элемента со сдвигом:
 // ВНИМАНИЕ: Удаление указателя из массива не удаляет сам блок памяти! Освобождай вручную!
 void* DArray_remove(DArray *arr, size_t index) {
@@ -139,7 +168,7 @@ void* DArray_remove(DArray *arr, size_t index) {
     memmove(&arr->data[index], &arr->data[index + 1], (arr->len - index - 1) * sizeof(void*));
     arr->len--;
 
-    // Ужимаем массив при необходимости:
+    // Ужимаем массив при необходимости (убрано для полного контроля):
     // DArray_shrink(arr);
 
     return ptr;

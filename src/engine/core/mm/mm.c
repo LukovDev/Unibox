@@ -13,6 +13,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdatomic.h>
 #include "mm.h"
 
@@ -98,6 +99,17 @@ void* mm_realloc(void *ptr, size_t new_size) {
     mm_used_size_add(new_size - *(size_t*)new_raw_ptr);
     *(size_t*)new_raw_ptr = new_size;
     return (char*)new_raw_ptr + sizeof(size_t);
+}
+
+
+// Копирование строки:
+char* mm_strdup(const char *str) {
+    if (!str) return NULL;
+    size_t len = strlen(str) + 1;
+    char *copy = mm_alloc(len);
+    if (!copy) { mm_alloc_error(); return NULL; }
+    memcpy(copy, str, len);
+    return copy;
 }
 
 
