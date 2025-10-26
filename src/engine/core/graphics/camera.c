@@ -1,10 +1,6 @@
 //
 // camera.c - Исходник, реализовывающий работу камеры.
 //
-// Тут используется обычный malloc/free, потому что mm движка не выравнивает указатели на блоки,
-// из за чего происходит крах программы. TODO: Сделать чтобы в mm, возвращаемые указатели были
-// выравнены по 16 байт.
-//
 
 
 // Подключаем:
@@ -25,9 +21,8 @@ static void Camera2D_Impl_ui_end(Camera2D *self);
 
 // Создать 2D камеру:
 Camera2D* Camera2D_create(Window *window, int width, int height, Vec2d position, float angle, float zoom) {
-    Camera2D *camera = (Camera2D*)malloc(sizeof(Camera2D));
+    Camera2D *camera = (Camera2D*)mm_alloc(sizeof(Camera2D));
     if (!camera) mm_alloc_error();
-    else mm_used_size_add(sizeof(Camera2D));
 
     // Заполняем поля:
     camera->window = window;
@@ -70,8 +65,7 @@ Camera2D* Camera2D_create(Window *window, int width, int height, Vec2d position,
 // Уничтожить 2D камеру:
 void Camera2D_destroy(Camera2D **camera) {
     if (!camera || !*camera) return;
-    free(*camera);
-    mm_used_size_sub(sizeof(Camera2D));
+    mm_free(*camera);
     *camera = NULL;
 }
 

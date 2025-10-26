@@ -26,7 +26,21 @@ void  (*_m_free)    (void *p)            = free;
 
 
 // Сколько памяти используется в байтах:
-static atomic_size_t mm_used_size = 0;
+static const size_t _header_size = sizeof(size_t) * 8;  // Выравнивание по 8 байт для SSE, AVX/2, кэша и чётных адресов.
+static atomic_size_t mm_total_allocated_blocks = 0;     // Количество выделенных блоков.
+static atomic_size_t mm_used_size = 0;                  // Количество используемой виртуальной памяти.
+
+
+// Получить размер заголовка блока в байтах:
+size_t mm_get_block_header_size() { return _header_size; }
+
+
+// Получить количество выделенных блоков:
+size_t mm_get_total_allocated_blocks() { return mm_total_allocated_blocks; }
+
+
+// Получить абсолютный размер используемой памяти в байтах с учётом заголовков блоков:
+size_t mm_get_absolute_used_size() { return mm_used_size + _header_size * mm_total_allocated_blocks; }
 
 
 // Получить сколько всего используется памяти в байтах этим менеджером памяти:
@@ -48,7 +62,7 @@ double mm_get_used_size_gb() { return mm_get_used_size() / 1024.0 / 1024.0 / 102
 // Получить размер блока в байтах:
 size_t mm_get_block_size(void *ptr) {
     if (!ptr) return 0;
-    return *(size_t*)((char*)ptr - sizeof(size_t));
+    return *(size_t*)((char*)ptr - _header_size);
 }
 
 
@@ -66,26 +80,28 @@ void mm_used_size_sub(size_t size) {
 
 // Выделение памяти:
 void* mm_alloc(size_t size) {
-    // Выделяем с запасом под данные размера блока:
+    // Выделяем с запасом под данные размера блока с учетом выравнивания:
     // [размер блока в size_t|сам блок] <- весь блок.
-    // ptr = (void*)(raw_ptr + sizeof(size_t)) -> получить сам блок.
-    // raw_ptr = (void*)(ptr - sizeof(size_t)) -> получить весь блок.
-    char *raw_ptr = _m_alloc(sizeof(size_t) + size);
+    // ptr = (void*)(raw_ptr + _header_size) -> получить сам блок.
+    // raw_ptr = (void*)(ptr - _header_size) -> получить весь блок.
+    char *raw_ptr = _m_alloc(_header_size + size);
     if (!raw_ptr) { mm_alloc_error(); return NULL; }
     *(size_t*)raw_ptr = size;  // Сохраняем размер.
-    void *ptr = raw_ptr + sizeof(size_t);
+    void *ptr = raw_ptr + _header_size;
     mm_used_size_add(mm_get_block_size(ptr));
+    mm_total_allocated_blocks++;
     return ptr;
 }
 
 
 // Выделение памяти с обнулением:
 void* mm_calloc(size_t count, size_t size) {
-    char *raw_ptr = _m_calloc(1, sizeof(size_t) + count * size);
+    char *raw_ptr = _m_calloc(1, _header_size + count * size);
     if (!raw_ptr){ mm_alloc_error(); return NULL; }
     *(size_t*)raw_ptr = count * size;  // Сохраняем размер.
-    void *ptr = raw_ptr + sizeof(size_t);
+    void *ptr = raw_ptr + _header_size;
     mm_used_size_add(mm_get_block_size(ptr));
+    mm_total_allocated_blocks++;
     return ptr;
 }
 
@@ -93,12 +109,12 @@ void* mm_calloc(size_t count, size_t size) {
 // Расширение блока памяти:
 void* mm_realloc(void *ptr, size_t new_size) {
     if (!ptr) return mm_alloc(new_size);  // Если NULL -> обычный alloc.
-    void *raw_ptr = (char*)ptr - sizeof(size_t);
-    void *new_raw_ptr = _m_realloc(raw_ptr, sizeof(size_t) + new_size);
+    void *raw_ptr = (char*)ptr - _header_size;
+    void *new_raw_ptr = _m_realloc(raw_ptr, _header_size + new_size);
     if (!new_raw_ptr) { mm_alloc_error(); return NULL; }
     mm_used_size_add(new_size - *(size_t*)new_raw_ptr);
     *(size_t*)new_raw_ptr = new_size;
-    return (char*)new_raw_ptr + sizeof(size_t);
+    return (char*)new_raw_ptr + _header_size;
 }
 
 
@@ -117,7 +133,8 @@ char* mm_strdup(const char *str) {
 void mm_free(void *ptr) {
     if (!ptr) return;
     mm_used_size_sub(mm_get_block_size(ptr));
-    _m_free((char*)ptr - sizeof(size_t));
+    mm_total_allocated_blocks--;
+    _m_free((char*)ptr - _header_size);
 }
 
 

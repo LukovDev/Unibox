@@ -81,7 +81,7 @@ void update(Window *self, Input *input, float dtime) {
     printf("Update called. FPS %f\n", self->get_current_fps(self));
     if (self->get_is_focused(self)) {
         printf("Focused\n");
-        self->set_fps(self, 10);
+        self->set_fps(self, 0);
     }
     if (self->get_is_defocused(self)) {
         printf("Defocused\n");
@@ -224,13 +224,17 @@ int main(int argc, char *argv[]) {
 
     window->create(window);
 
-    printf("(Before free) Memory used: %g kb (%zu b).\n", mm_get_used_size_kb(), mm_get_used_size());
+    printf("(Before free) MM used: %g kb (%zu b). Blocks allocated: %zu. Absolute: %zu b. BlockHeaderSize: %zu b.\n",
+            mm_get_used_size_kb(), mm_get_used_size(), mm_get_total_allocated_blocks(), mm_get_absolute_used_size(),
+            mm_get_block_header_size());
 
     WindowSDL3_destroy(&window);
     Window_destroy_config(&config);
     RendererGL_destroy(&renderer);
 
-    printf("(After free) Memory used: %g kb (%zu b).\n", mm_get_used_size_kb(), mm_get_used_size());
+    printf("(After free) MM used: %g kb (%zu b). Blocks allocated: %zu. Absolute: %zu b. BlockHeaderSize: %zu b.\n",
+            mm_get_used_size_kb(), mm_get_used_size(), mm_get_total_allocated_blocks(), mm_get_absolute_used_size(),
+            mm_get_block_header_size());
     if (mm_get_used_size() > 0) printf("Memory leak!\n");
 
     return 0;
