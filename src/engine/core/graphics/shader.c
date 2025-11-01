@@ -84,6 +84,10 @@ void ShaderProgram_destroy(ShaderProgram **shader) {
     //     DArray_destroy(&(*shader)->sampler_units);
     // }
 
+    // Удаляем сам шейдер:
+    (*shader)->_destroy_(*shader);
+
+    // Освобождаем структуру:
     if ((*shader)->error) mm_free((*shader)->error);
     mm_free(*shader);
     *shader = NULL;

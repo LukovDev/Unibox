@@ -20,6 +20,7 @@
 static void ShaderGL_Impl_compile(ShaderProgram *self);
 static void ShaderGL_Impl_begin(ShaderProgram *self);
 static void ShaderGL_Impl_end(ShaderProgram *self);
+static void ShaderGL_Impl__destroy_(ShaderProgram *self);
 static int32_t ShaderGL_Impl_get_location(ShaderProgram *self, const char* name);
 static void ShaderGL_Impl_set_uniform_bool(ShaderProgram *self, const char* name, bool value);
 static void ShaderGL_Impl_set_uniform_int(ShaderProgram *self, const char* name, int value);
@@ -43,6 +44,7 @@ void ShaderGL_RegisterAPI(ShaderProgram *shader) {
     shader->compile = ShaderGL_Impl_compile;
     shader->begin = ShaderGL_Impl_begin;
     shader->end = ShaderGL_Impl_end;
+    shader->_destroy_ = ShaderGL_Impl__destroy_;
     shader->get_location = ShaderGL_Impl_get_location;
     shader->set_uniform_bool = ShaderGL_Impl_set_uniform_bool;
     shader->set_uniform_int = ShaderGL_Impl_set_uniform_int;
@@ -82,6 +84,7 @@ static inline ShaderCacheUniformValue* find_cached_uniform(ShaderProgram *self, 
 
 
 static uint32_t compile_shader(ShaderProgram *program, const char* source, GLenum type) {
+    if (!source) return 0;
     uint32_t shader = glCreateShader(type);
     glShaderSource(shader, 1, &source, NULL);
     glCompileShader(shader);
@@ -116,6 +119,16 @@ static void ShaderGL_Impl_compile(ShaderProgram *self) {
 
     uint32_t program = glCreateProgram();
     uint32_t shaders[3] = {0};
+
+    if (!program) {
+        // Сколько надо выделить памяти:
+        int needed = snprintf(NULL, 0, "ShaderCreateError: The OpenGL context has not been created or is inactive.\n");
+        self->error = mm_alloc(needed + 1);
+        // Форматируем строку:
+        sprintf(self->error, "ShaderCreateError: The OpenGL context has not been created or is inactive.\n");
+        fprintf(stderr, "%s", self->error);
+        return;
+    }
 
     // Компилируем шейдеры:
     if (self->vertex)   shaders[0] = compile_shader(self, self->vertex, GL_VERTEX_SHADER);
@@ -170,6 +183,15 @@ static void ShaderGL_Impl_end(ShaderProgram *self) {
     if (!self) return;
     glUseProgram((uint32_t)self->_id_before_begin_);
     self->_is_begin_ = false;
+}
+
+
+static void ShaderGL_Impl__destroy_(ShaderProgram *self) {
+    if (!self) return;
+    if (self->id) {
+        glDeleteProgram(self->id);
+        self->id = 0;
+    }
 }
 
 

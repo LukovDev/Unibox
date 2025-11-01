@@ -17,15 +17,17 @@ typedef enum RenderType {
 
 // Объявление структур:
 typedef struct Renderer Renderer;
+typedef struct ShaderProgram ShaderProgram;
 
 
 // Типовая структура рендерера:
 typedef struct Renderer {
     // Поля:
-    const char *name;
-    RenderType type;
-    void       *camera;  // Текущая активная камера.
-    void       *data;    // Указатель на структуру данных рендерера.
+    const char    *name;
+    RenderType    type;
+    ShaderProgram *default_shader;  // Дефолтная шейдерная программа.
+    void          *camera;  // Текущая активная камера.
+    void          *data;    // Указатель на структуру данных рендерера.
 
     // -------------------------------- API рендерера: --------------------------------
 

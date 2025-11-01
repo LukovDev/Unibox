@@ -84,6 +84,7 @@ typedef struct ShaderProgram {
     char* (*get_error) (ShaderProgram *self);  // Получить ошибку компиляции или линковки.
     void  (*begin)     (ShaderProgram *self);  // Активация программы.
     void  (*end)       (ShaderProgram *self);  // Деактивация программы.
+    void  (*_destroy_) (ShaderProgram *self);  // Внутренняя функция для удаления самого шейдера.
 
     int32_t (*get_location) (ShaderProgram *self, const char* name);  // Получить локацию переменной.
 

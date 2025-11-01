@@ -42,14 +42,14 @@ void start(Window *self) {
     // printf("Time: %f\n", Time_now(NULL)-start_time);
 
 
-    const char* vertex_shader_src = fs_load_file("data/shaders/default.vert", "r");
-    const char* fragment_shader_src = fs_load_file("data/shaders/default.frag", "r");
+    // const char* vertex_shader_src = fs_load_file("data/shaders/default.vert", "r");
+    // const char* fragment_shader_src = fs_load_file("data/shaders/default.frag", "r");
 
-    shader = ShaderProgram_create(self->renderer, vertex_shader_src, fragment_shader_src, NULL);
-    shader->compile(shader);
+    // shader = ShaderProgram_create(self->renderer, vertex_shader_src, fragment_shader_src, NULL);
+    // shader->compile(shader);
 
-    mm_free((char*)vertex_shader_src);
-    mm_free((char*)fragment_shader_src);
+    // mm_free((char*)vertex_shader_src);
+    // mm_free((char*)fragment_shader_src);
 
     // === Вершины треугольника ===
     float vertices[] = {
@@ -164,10 +164,11 @@ void render(Window *self, Renderer *render, float dtime) {
     glm_rotate(model, glm_rad(g*360.0f), (vec3){0.0f, 1.0f, 0.0f});
     glm_rotate(model, glm_rad(r*360.0f), (vec3){1.0f, 0.0f, 0.0f});
     glm_rotate(model, glm_rad(b*360.0f), (vec3){0.0f, 0.0f, 1.0f});
-    shader->begin(shader);
-    shader->set_uniform_mat4(shader, "u_model", model);
-    shader->set_uniform_float(shader, "u_time", self->get_time(self));
-    shader->set_uniform_vec2(shader, "u_resolution", (Vec2f){self->get_width(self), self->get_height(self)});
+    // shader->begin(shader);
+    // shader->set_uniform_mat4(shader, "u_model", model);
+    render->default_shader->set_uniform_mat4(render->default_shader, "u_model", model);
+    // shader->set_uniform_float(shader, "u_time", self->get_time(self));
+    // shader->set_uniform_vec2(shader, "u_resolution", (Vec2f){self->get_width(self), self->get_height(self)});
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -176,9 +177,10 @@ void render(Window *self, Renderer *render, float dtime) {
     glm_rotate(model, glm_rad(b*360.0f), (vec3){0.0f, 1.0f, 0.0f});
     glm_rotate(model, glm_rad(g*360.0f), (vec3){1.0f, 0.0f, 0.0f});
     glm_rotate(model, glm_rad(r*360.0f), (vec3){0.0f, 0.0f, 1.0f});
-    shader->set_uniform_mat4(shader, "u_model", model);
+    // shader->set_uniform_mat4(shader, "u_model", model);
+    render->default_shader->set_uniform_mat4(render->default_shader, "u_model", model);
     glDrawArrays(GL_TRIANGLES, 0, 3);
-    shader->end(shader);
+    // shader->end(shader);
 
     self->display(self);
 }
