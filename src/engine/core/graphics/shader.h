@@ -69,9 +69,9 @@ typedef struct ShaderProgram {
     const char* geometry;
     char* error;
     uint32_t id;
-    int32_t _id_before_begin_;
     Renderer *renderer;
     bool _is_begin_;
+    int32_t _id_before_begin_;
 
     // Динамические списки для кэша параметров шейдера:
     DArray *uniform_locations;  // Кэш позиций uniform.

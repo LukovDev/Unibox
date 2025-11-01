@@ -44,6 +44,7 @@ typedef struct Texture {
     int height;
     int channels;
     bool _is_begin_;
+    int32_t _id_before_begin_;
 
     // Функции:
 
@@ -52,7 +53,7 @@ typedef struct Texture {
     void (*load)  (Texture *self, Image *image);  // Загрузить текстуру из картинки.
 
     // Установить данные текстуры:
-    void (*set_data) (Texture *self, int width, int height, const void *data, bool use_mipmap,
+    void (*set_data) (Texture *self, const int width, const int height, const void *data, bool use_mipmap,
                       TextureFormat tex_format, TextureFormat data_format, TextureDataType data_type);
 
     Image* (*get_image)   (Texture *self, int channels);  // Получить картинку из текстуры.

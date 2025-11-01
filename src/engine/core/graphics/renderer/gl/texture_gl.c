@@ -4,6 +4,7 @@
 
 
 // Подключаем:
+#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -18,7 +19,7 @@
 static void TextureGL_Impl_begin(Texture *self);
 static void TextureGL_Impl_end(Texture *self);
 static void TextureGL_Impl_load(Texture *self, Image *image);
-static void TextureGL_Impl_set_data(Texture *self, int width, int height, const void *data, bool use_mipmap,
+static void TextureGL_Impl_set_data(Texture *self, const int width, const int height, const void *data, bool use_mipmap,
                                     TextureFormat tex_format, TextureFormat data_format, TextureDataType data_type);
 static Image* TextureGL_Impl_get_image(Texture *self, int channels);
 static void TextureGL_Impl_set_filter(Texture *self, int name, int param);
@@ -45,21 +46,23 @@ void TextureGL_RegisterAPI(Texture *texture) {
 
 
 static void TextureGL_Impl_begin(Texture *self) {
-    if (!self) return;
+    if (!self || self->_is_begin_ || self->id == 0) return;
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &self->_id_before_begin_);
     glBindTexture(GL_TEXTURE_2D, self->id);
     self->_is_begin_ = true;
 }
 
 
 static void TextureGL_Impl_end(Texture *self) {
-    if (!self) return;
-    glBindTexture(GL_TEXTURE_2D, 0);
+    if (!self || !self->_is_begin_) return;
+    glBindTexture(GL_TEXTURE_2D, (uint32_t)self->_id_before_begin_);
     self->_is_begin_ = false;
 }
 
 
 static void TextureGL_Impl_load(Texture *self, Image *image) {
-    if (!self) return;
+    if (!self || !image) return;
+
     // Подбираем формат данных:
     TextureFormat tex_format;
     switch (image->channels) {
@@ -69,6 +72,7 @@ static void TextureGL_Impl_load(Texture *self, Image *image) {
         case 4:  { tex_format = TEX_RGBA; break; }
         default: { tex_format = TEX_RGBA; break; }
     }
+
     // Выделяем память под данные:
     self->set_data(
         self, image->width, image->height, image->data, true,
@@ -78,20 +82,20 @@ static void TextureGL_Impl_load(Texture *self, Image *image) {
 
 
 static void TextureGL_Impl_set_data(
-    Texture *self, int width, int height, const void *data, bool use_mipmap,
+    Texture *self, const int width, const int height, const void *data, bool use_mipmap,
     TextureFormat tex_format, TextureFormat data_format, TextureDataType data_type) {
     if (!self) return;
 
-    // Если размеры текущей текстуры не совпадает с передаваемыми данными, удаляем её:
-    if (self->width != width || self->height != height) {
-        self->_destroy_(self);
-        self->width = width;
-        self->height = height;
-    }
+    self->width = width <= 0 ? 1 : width;
+    self->height = height <= 0 ? 1 : height;
 
     // Если текстура еще не создана, то создаем ее:
-    if (!self->id) glGenTextures(1, &self->id);
-    if (!self->_is_begin_) glBindTexture(GL_TEXTURE_2D, self->id);
+    if (self->id == 0) glGenTextures(1, &self->id);
+    if (self->id == 0) {  // Если она так и не создалась, то выходим:
+        fprintf(stderr, "TextureGL_Impl_set_data: The texture could not be created.\n");
+        return;
+    }
+    self->begin(self);
 
     // Подбираем формат текстуры:
     int gl_tex_format;
@@ -134,23 +138,26 @@ static void TextureGL_Impl_set_data(
         default:              { gl_data_type = GL_UNSIGNED_BYTE; break; }
     }
 
+    // Перепроверка:
+    if (gl_tex_format == GL_RGB16F || gl_tex_format == GL_RGBA16F) gl_data_type = GL_HALF_FLOAT;
+    else if (gl_tex_format == GL_RGB32F || gl_tex_format == GL_RGBA32F) gl_data_type = GL_FLOAT;
+
     // Загрузка данных текстуры:
-    glTexImage2D(GL_TEXTURE_2D, 0, gl_tex_format, width, height, 0, gl_data_format, gl_data_type, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, gl_tex_format, self->width, self->height, 0, gl_data_format, gl_data_type, data);
 
     // Если надо использовать мипмапы, создаём их:
     if (use_mipmap) glGenerateMipmap(GL_TEXTURE_2D);
-    if (!self->_is_begin_) glBindTexture(GL_TEXTURE_2D, 0);
+    self->end(self);
 }
 
 
 static Image* TextureGL_Impl_get_image(Texture *self, int channels) {
     if (!self) return NULL;
 
-    // Выделяем память под данные:
+    // Выделяем память под данные (указатель на блок сохраняется в img ниже):
     unsigned char* data = mm_alloc(self->width * self->height * channels);
     if (!data) mm_alloc_error();
 
-    if (!self->_is_begin_) glBindTexture(GL_TEXTURE_2D, self->id);
     // Подбираем формат данных:
     int gl_data_format;
     switch (channels) {
@@ -160,8 +167,9 @@ static Image* TextureGL_Impl_get_image(Texture *self, int channels) {
         case 4:  { gl_data_format = GL_RGBA; break; }
         default: { gl_data_format = GL_RGBA; break; }
     }
+    self->begin(self);
     glGetTexImage(GL_TEXTURE_2D, 0, gl_data_format, GL_UNSIGNED_BYTE, data);
-    if (!self->_is_begin_) glBindTexture(GL_TEXTURE_2D, 0);
+    self->end(self);
 
     // Создаём изображение:
     Image* img = mm_alloc(sizeof(Image));
@@ -172,16 +180,15 @@ static Image* TextureGL_Impl_get_image(Texture *self, int channels) {
     img->channels = channels;
     img->from_stbi = false;
     img->data = data;
-
-    return img;
+    return img;  // Не забудьте уничтожить Image!
 }
 
 
 static void TextureGL_Impl_set_filter(Texture *self, int name, int param) {
     if (!self) return;
-    if (!self->_is_begin_) glBindTexture(GL_TEXTURE_2D, self->id);
+    self->begin(self);
     glTexParameteri(GL_TEXTURE_2D, name, param);
-    if (!self->_is_begin_) glBindTexture(GL_TEXTURE_2D, 0);
+    self->end(self);
 }
 
 

@@ -36,7 +36,7 @@ Texture* Texture_create(Renderer *renderer) {
         default: {
             const char* err = "Unknown renderer type.";
             fprintf(stderr, "Texture_create: %s\n", err);
-            return texture;
+            return NULL;
         }
     }
     return texture;
