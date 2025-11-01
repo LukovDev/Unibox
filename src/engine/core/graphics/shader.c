@@ -9,8 +9,7 @@
 #include "../mm/mm.h"
 #include "../darray.h"
 #include "renderer.h"
-#include "renderer/gl/renderer_gl.h"
-#include "renderer/gl/shader_gl.h"
+#include "realization.h"
 #include "shader.h"
 
 
@@ -20,6 +19,8 @@ static char* ShaderProgram_Impl_get_error(ShaderProgram *self);
 
 // Создать шейдерную программу:
 ShaderProgram* ShaderProgram_create(Renderer *renderer, const char *vert, const char *frag, const char *geom) {
+    if (!renderer) return NULL;
+
     ShaderProgram *shader = mm_calloc(1, sizeof(ShaderProgram));
     if (!shader) mm_alloc_error();
 

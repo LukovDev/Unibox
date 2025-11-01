@@ -11,6 +11,7 @@
 GLuint VBO, VAO;
 Camera2D *camera;
 ShaderProgram *shader;
+Texture *texture;
 
 
 // Вызывается после создания окна:
@@ -26,6 +27,12 @@ void start(Window *self) {
     Image_destroy(&image);
     self->set_fps(self, 10);
     self->set_vsync(self, false);
+
+    texture = Texture_create(self->renderer);
+
+    Image *img2 = Image_load("data/so_bad.png", IMG_RGBA);
+    texture->load(texture, img2);
+    Image_destroy(&img2);
 
     camera = Camera2D_create(
         self, self->get_width(self), self->get_height(self),
@@ -81,7 +88,7 @@ void update(Window *self, Input *input, float dtime) {
     printf("Update called. FPS %f\n", self->get_current_fps(self));
     if (self->get_is_focused(self)) {
         printf("Focused\n");
-        self->set_fps(self, 0);
+        self->set_fps(self, 10);
     }
     if (self->get_is_defocused(self)) {
         printf("Defocused\n");
@@ -134,13 +141,14 @@ void update(Window *self, Input *input, float dtime) {
     static int counter = 0;
     if (counter++ % 100 == 0) self->raise(self);
 
-    self->set_title(self, "x: %g, y: %g", camera->position.x, camera->position.y);
+    self->set_title(self, "x: %g, y: %g, zoom: %g", camera->position.x, camera->position.y, camera->zoom);
 
     camera->zoom -= input->get_mouse_wheel(self).y * camera->zoom * 0.1f;
-    if (input->get_key_pressed(self)[K_w]) camera->position.y += 10.0f * dtime;
-    if (input->get_key_pressed(self)[K_a]) camera->position.x -= 10.0f * dtime;
-    if (input->get_key_pressed(self)[K_s]) camera->position.y -= 10.0f * dtime;
-    if (input->get_key_pressed(self)[K_d]) camera->position.x += 10.0f * dtime;
+    float speed = 10.0f * camera->zoom * camera->meter;
+    if (input->get_key_pressed(self)[K_w]) camera->position.y += speed * dtime;
+    if (input->get_key_pressed(self)[K_a]) camera->position.x -= speed * dtime;
+    if (input->get_key_pressed(self)[K_s]) camera->position.y -= speed * dtime;
+    if (input->get_key_pressed(self)[K_d]) camera->position.x += speed * dtime;
     if (input->get_mouse_pressed(self)[2]) {
         camera->position.x -= input->get_mouse_rel(self).x * camera->zoom;
         camera->position.y += input->get_mouse_rel(self).y * camera->zoom;
@@ -164,11 +172,12 @@ void render(Window *self, Renderer *render, float dtime) {
     glm_rotate(model, glm_rad(g*360.0f), (vec3){0.0f, 1.0f, 0.0f});
     glm_rotate(model, glm_rad(r*360.0f), (vec3){1.0f, 0.0f, 0.0f});
     glm_rotate(model, glm_rad(b*360.0f), (vec3){0.0f, 0.0f, 1.0f});
-    // shader->begin(shader);
-    // shader->set_uniform_mat4(shader, "u_model", model);
+    // texture->begin(texture);
+    // glActiveTexture(GL_TEXTURE1);
+    render->default_shader->set_uniform_vec4(render->default_shader, "u_color", (Vec4f){r, g, b, 1.0f});
     render->default_shader->set_uniform_mat4(render->default_shader, "u_model", model);
-    // shader->set_uniform_float(shader, "u_time", self->get_time(self));
-    // shader->set_uniform_vec2(shader, "u_resolution", (Vec2f){self->get_width(self), self->get_height(self)});
+    // render->default_shader->set_uniform_bool(render->default_shader, "u_use_texture", true);
+    // render->default_shader->set_uniform_int(render->default_shader, "u_texture", 1);
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -177,9 +186,10 @@ void render(Window *self, Renderer *render, float dtime) {
     glm_rotate(model, glm_rad(b*360.0f), (vec3){0.0f, 1.0f, 0.0f});
     glm_rotate(model, glm_rad(g*360.0f), (vec3){1.0f, 0.0f, 0.0f});
     glm_rotate(model, glm_rad(r*360.0f), (vec3){0.0f, 0.0f, 1.0f});
-    // shader->set_uniform_mat4(shader, "u_model", model);
+    render->default_shader->set_uniform_vec4(render->default_shader, "u_color", (Vec4f){g, b, r, 1.0f});
     render->default_shader->set_uniform_mat4(render->default_shader, "u_model", model);
     glDrawArrays(GL_TRIANGLES, 0, 3);
+    texture->end(texture);
     // shader->end(shader);
 
     self->display(self);
@@ -212,6 +222,7 @@ void destroy(Window *self) {
     glDeleteBuffers(1, &VBO);
     ShaderProgram_destroy(&shader);
     Camera2D_destroy(&camera);
+    Texture_destroy(&texture);
     printf("destroy done.\n");
 }
 

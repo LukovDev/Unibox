@@ -23,16 +23,10 @@ const char* CORE_NAME = "A002-UNIBOX";
 #include "mm/mm.h"
 
 // Графика:
+#include "graphics/realization.h"
 #include "graphics/camera.h"
 #include "graphics/image.h"
 #include "graphics/renderer.h"
 #include "graphics/shader.h"
+#include "graphics/texture.h"
 #include "graphics/window.h"
-
-// Окна:
-#include "graphics/window/w_sdl3.h"
-// ...
-
-// Рендереры:
-#include "graphics/renderer/gl/renderer_gl.h"
-// ...

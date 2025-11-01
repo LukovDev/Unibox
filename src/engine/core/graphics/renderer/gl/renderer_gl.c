@@ -51,7 +51,6 @@ static const char* DEFAULT_SHD_FRAG = \
 "    } else {\n"
 "        FragColor = u_color;\n"
 "    }\n"
-"    FragColor = vec4(1, 0, 0, 1);\n"
 "}\n";
 
 

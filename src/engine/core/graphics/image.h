@@ -18,7 +18,7 @@ extern const int Image_default_icon_height;
 
 // Размеры каналов в байтах:
 #define IMG_R    1
-#define IMG_RA   2
+#define IMG_RG   2
 #define IMG_RGB  3
 #define IMG_RGBA 4
 
@@ -33,7 +33,10 @@ typedef struct Image {
 
 
 // Загрузить картинку:
-Image* Image_load(const char* filepath, int format);
+Image* Image_load(const char *filepath, int format);
+
+// Сохранить картинку:
+bool Image_save(Image* image, const char *filepath, const char *format);
 
 // Копировать картинку в памяти:
 Image* Image_copy(const Image *source);

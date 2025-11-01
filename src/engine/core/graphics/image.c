@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include "../mm/mm.h"
 #include "stb/stb_image.h"
+#include "stb/stb_image_write.h"
 #include "image.h"
 
 
@@ -27,6 +28,37 @@ Image* Image_load(const char *filepath, int format) {
     image->from_stbi = true;
     mm_used_size_add(Image_get_size(image));
     return image;
+}
+
+
+// Сохранить картинку:
+bool Image_save(Image *image, const char *filepath, const char *format) {
+    if (!image || !image->data || !filepath || !format) return false;
+    bool success = false;
+
+    // Определяем формат по строке:
+    if (strcmp(format, "png") == 0) {
+        success = stbi_write_png(
+            filepath, image->width, image->height,
+            image->channels, image->data,
+            image->width * image->channels);
+    } else if (strcmp(format, "jpg") == 0 || strcmp(format, "jpeg") == 0) {
+        success = stbi_write_jpg(
+            filepath, image->width, image->height, image->channels, image->data, 100); // Качество 100%.
+    } else if (strcmp(format, "bmp") == 0) {
+        success = stbi_write_bmp(filepath, image->width, image->height, image->channels, image->data);
+    } else if (strcmp(format, "tga") == 0) {
+        success = stbi_write_tga(filepath, image->width, image->height, image->channels, image->data);
+    } else {
+        fprintf(stderr, "Image_save: Unknown format: \"%s\"\n", format);
+        return false;
+    }
+
+    if (!success) {
+        fprintf(stderr, "Image_save: Saving image failed: \"%s\"\n", filepath);
+        return false;
+    }
+    return true;
 }
 
 
