@@ -34,5 +34,5 @@ const char* CORE_NAME = "A002-UNIBOX";
 // ...
 
 // Рендереры:
-#include "graphics/renderer/r_gl.h"
+#include "graphics/renderer/gl/renderer_gl.h"
 // ...

@@ -9,7 +9,8 @@
 #include "../mm/mm.h"
 #include "../darray.h"
 #include "renderer.h"
-#include "renderer/r_gl.h"
+#include "renderer/gl/renderer_gl.h"
+#include "renderer/gl/shader_gl.h"
 #include "shader.h"
 
 
@@ -38,7 +39,7 @@ ShaderProgram* ShaderProgram_create(Renderer *renderer, const char *vert, const 
     // Регистрируем функции для определенного рендерера:
     switch (renderer->type) {
         case RENDERER_OPENGL:
-            RendererGL_RegisterShaderProgramAPI(shader);
+            ShaderGL_RegisterAPI(shader);
             break;
 
         // Other renderers.

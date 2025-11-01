@@ -15,7 +15,7 @@
 #include "../../input.h"
 #include "../image.h"
 #include "../renderer.h"
-#include "../renderer/r_gl.h"
+#include "../renderer/gl/renderer_gl.h"
 #include "../window.h"
 #include "w_sdl3.h"
 
