@@ -12,6 +12,7 @@
 #include "../../gl.h"
 #include "../../image.h"
 #include "../../texture.h"
+#include "buffer_gc_gl.h"
 #include "texture_gl.h"
 
 
@@ -209,7 +210,7 @@ static void TextureGL_Impl_set_pixelized(Texture *self) {
 static void TextureGL_Impl__destroy_(Texture *self) {
     if (!self) return;
     glBindTexture(GL_TEXTURE_2D, 0);
-    glDeleteTextures(1, &self->id);
+    BufferGC_GL_push(BGC_GL_TBO, self->id);  // Добавляем буфер в стек на уничтожение.
     self->_is_begin_ = false;
     self->id = 0;
 }

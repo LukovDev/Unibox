@@ -88,7 +88,7 @@ void update(Window *self, Input *input, float dtime) {
     printf("Update called. FPS %f\n", self->get_current_fps(self));
     if (self->get_is_focused(self)) {
         printf("Focused\n");
-        self->set_fps(self, 10);
+        self->set_fps(self, 0);
     }
     if (self->get_is_defocused(self)) {
         printf("Defocused\n");

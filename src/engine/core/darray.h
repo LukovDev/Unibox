@@ -24,6 +24,7 @@ typedef struct DArray {
     void **data;       // Массив указателей.
     size_t len;        // Длина массива (сколько ячеек занято).
     size_t capacity;   // Всего выделенных ячеек в памяти.
+    size_t init_cap;   // Размер массива по умолчанию.
 } DArray;
 
 

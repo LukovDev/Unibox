@@ -41,6 +41,7 @@ DArray* DArray_create(size_t initial_capacity) {
 
     arr->len = 0;
     arr->capacity = initial_capacity;
+    arr->init_cap = initial_capacity;
     return arr;
 }
 
@@ -63,7 +64,7 @@ void DArray_shrink(DArray *arr) {
 
     // Если массив пустой, задаем дефолтный размер:
     if (arr->len == 0) {
-        arr->capacity = DARRAY_DEFAULT_CAPACITY;
+        arr->capacity = arr->init_cap;
         arr->data = mm_realloc(arr->data, sizeof(void*) * arr->capacity);
         if (!arr->data) mm_alloc_error();
         return;

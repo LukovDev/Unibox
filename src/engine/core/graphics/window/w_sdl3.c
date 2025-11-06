@@ -346,6 +346,9 @@ static void WindowSDL3_MainLoop(Window *self, WinConfig *cfg) {
         if (cfg->update) cfg->update(self, self->input, self->get_dtime(self));
         if (cfg->render) cfg->render(self, self->renderer, self->get_dtime(self));
 
+        // Очищаем все буфера (массивное удаление всех буферов за раз):
+        self->renderer->buffers_flush(self->renderer);
+
         // Проверяем что окно хотят закрыть:
         if (WinVars->closing) {
             WindowSDL3_Closing_stage(self);
@@ -375,6 +378,7 @@ static void WindowSDL3_Log_err(const char *msg, ...) {
 }
 
 
+// Этап закрытия окна:
 static void WindowSDL3_Closing_stage(Window *self) {
     if (!self || !self->config) return;
     WindowSDL3_Vars *WinVars = WindowSDL3_GetVars(self);

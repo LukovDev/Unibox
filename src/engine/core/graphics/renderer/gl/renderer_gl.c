@@ -14,6 +14,7 @@
 #include "../../gl.h"
 #include "../../camera.h"
 #include "../../shader.h"
+#include "buffer_gc_gl.h"
 #include "renderer_gl.h"
 
 
@@ -57,6 +58,7 @@ static const char* DEFAULT_SHD_FRAG = \
 // Объявление функций:
 static void RendererGL_Impl_init(Renderer *self);
 static void RendererGL_Impl_clear(Renderer *self, float r, float g, float b, float a);
+static void RendererGL_Impl_buffers_flush(Renderer *self);
 static void RendererGL_Impl_camera2d_update(Renderer *self);
 static void RendererGL_Impl_camera3d_update(Renderer *self);
 static void RendererGL_Impl_viewport_resize(Renderer *self, int width, int height);
@@ -66,6 +68,7 @@ static void RendererGL_Impl_viewport_resize(Renderer *self, int width, int heigh
 static void RendererGL_RegisterAPI(Renderer *self) {
     self->init = RendererGL_Impl_init;
     self->clear = RendererGL_Impl_clear;
+    self->buffers_flush = RendererGL_Impl_buffers_flush;
     self->camera2d_update = RendererGL_Impl_camera2d_update;
     self->camera3d_update = RendererGL_Impl_camera3d_update;
     self->viewport_resize = RendererGL_Impl_viewport_resize;
@@ -93,6 +96,9 @@ Renderer* RendererGL_create(int major, int minor, bool doublebuffer, RendererGL_
     renderer->default_shader = NULL;
     renderer->camera = NULL;
     renderer->data = data;
+
+    // Инициализация стеков буферов:
+    BufferGC_GL_init();
 
     // Создаём шейдер:
     ShaderProgram *default_shader = ShaderProgram_create(renderer, DEFAULT_SHD_VERT, DEFAULT_SHD_FRAG, NULL);
@@ -123,6 +129,10 @@ void RendererGL_destroy(Renderer **self) {
         (*self)->data = NULL;
     }
 
+    // Уничтожение стеков буферов:
+    BufferGC_GL_flush();
+    BufferGC_GL_destroy();
+
     // Освобождаем память шейдера:
     if ((*self)->default_shader) {
         ShaderProgram_destroy(&(*self)->default_shader);
@@ -132,6 +142,13 @@ void RendererGL_destroy(Renderer **self) {
     mm_free(*self);
     *self = NULL;
 }
+
+
+// Функция для вывода отладочных сообщений OpenGL:
+// static void APIENTRY OpenGL_Debug_Callback(GLenum source, GLenum type, GLuint id, GLenum severity,
+//                             GLsizei length, const GLchar* message, const void* userParam) {
+//     fprintf(stderr, "[OGL][%u]: %s\n", id, message);
+// }
 
 
 // Реализация API:
@@ -156,6 +173,16 @@ static void RendererGL_Impl_init(Renderer *self) {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
+    // Включаем отладку OpenGL:
+    // < ВЫРЕЗАНО на будущее внедрение. Сейчас не работает должным образом! >
+    // if (glDebugMessageCallback) {
+    //     glEnable(GL_DEBUG_OUTPUT);
+    //     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    //     glDebugMessageCallback(OpenGL_Debug_Callback, NULL);
+    // } else {
+    //     printf("glDebugMessageCallback not available.\n");
+    // }
+
     // Компилируем дефолтный шейдер:
     self->default_shader->compile(self->default_shader);
 }
@@ -165,6 +192,12 @@ static void RendererGL_Impl_clear(Renderer *self, float r, float g, float b, flo
     if (!self) return;
     glClearColor(r, g, b, a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+
+static void RendererGL_Impl_buffers_flush(Renderer *self) {
+    if (!self) return;
+    BufferGC_GL_flush();  // Очистка всех буферов.
 }
 
 
