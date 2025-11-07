@@ -36,5 +36,5 @@ typedef struct Renderer {
     void (*buffers_flush)   (Renderer *self);  // Вызывается в конце цикла, для удаления накопившихся буферов за кадр.
     void (*camera2d_update) (Renderer *self);  // Обновляем данные матриц в шейдере по умолчанию для 2D камеры.
     void (*camera3d_update) (Renderer *self);  // Обновляем данные матриц в шейдере по умолчанию для 3D камеры.
-    void (*viewport_resize) (Renderer *self, int width, int height);  // Масштабируем область просмотра.
+    void (*viewport_resize) (Renderer *self, int x, int y, int width, int height);  // Масштабируем область просмотра.
 } Renderer;

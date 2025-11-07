@@ -13,8 +13,11 @@
 #ifdef _WIN32
     #include <windows.h>
 #else
+    #define _POSIX_C_SOURCE 199309L
     #include <time.h>
+    int nanosleep(const struct timespec *req, struct timespec *rem);
     #include <sys/time.h>
+    #include <unistd.h>
 #endif
 
 

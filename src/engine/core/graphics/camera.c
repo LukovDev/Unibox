@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include "../mm/mm.h"
 #include "../math.h"
+#include "shader.h"
 #include "renderer.h"
 #include "window.h"
 #include "camera.h"
@@ -33,6 +34,7 @@ Camera2D* Camera2D_create(Window *window, int width, int height, Vec2d position,
     camera->meter = 100.0f;
     camera->width = width;
     camera->height = height;
+    camera->_ui_begin_ = false;
 
     // Матрица вида:
     glm_mat4_identity(camera->view);
@@ -74,6 +76,8 @@ void Camera2D_destroy(Camera2D **camera) {
 
 
 static void Camera2D_Impl_update(Camera2D *self) {
+    if (!self) return;
+
     glm_mat4_identity(self->view);
     if (self->zoom != 0.0) {
         glm_scale(self->view, (vec3){1.0f/self->zoom, 1.0f/self->zoom, 1.0f});
@@ -92,9 +96,11 @@ static void Camera2D_Impl_update(Camera2D *self) {
 
 
 static void Camera2D_Impl_resize(Camera2D *self, int width, int height) {
+    if (!self) return;
+
     self->width = width;
     self->height = height;
-    self->window->renderer->viewport_resize(self->window->renderer, width, height);
+    self->window->renderer->viewport_resize(self->window->renderer, 0, 0, width, height);
 
     glm_mat4_identity(self->proj);
     float wdth = self->width/2.0f * self->meter/100.0f;
@@ -105,33 +111,27 @@ static void Camera2D_Impl_resize(Camera2D *self, int width, int height) {
 
 
 static void Camera2D_Impl_ui_begin(Camera2D *self) {
-    /*
-    if self._ui_begin_:
-        raise Exception(
-            "Function \".ui_end()\" was not called in the last iteration of the loop.\n"
-            "The function \".ui_begin()\" cannot be called, since the last one "
-            "\".ui_begin()\" was not closed by the \".ui_end()\" function.")
-    self._ui_begin_ = True
-    if self.size.xy != self._old_size_.xy:
-        self._ui_view_ = glm.translate(mat4(1.0), vec3(-self.size.xy/2, 0))
-        self._old_size_ = self.size.xy
-    # Обнуляем матрицу вида в шейдере по умолчанию:
-    RenderPipeline.default_shader.begin()
-    RenderPipeline.default_shader.set_uniform("u_view", self._ui_view_)
-    RenderPipeline.default_shader.end()
-    */
-    return;
+    if (!self || self->_ui_begin_) return;
+    self->_ui_begin_ = true;
+
+    // Обнуляем матрицу вида в шейдере по умолчанию:
+    mat4 view;
+    glm_mat4_identity(view);
+    glm_translate(view, (vec3){-self->width/2, -self->height/2, 0});
+    ShaderProgram *shader = self->window->renderer->default_shader;
+    shader->begin(shader);
+    shader->set_uniform_mat4(shader, "u_view", view);
+    shader->end(shader);
 }
 
 
 static void Camera2D_Impl_ui_end(Camera2D *self) {
-    /*
-    if self._ui_begin_: self._ui_begin_ = False
-    else: raise Exception("The \".ui_begin()\" function was not called before the \".ui_end()\" function.")
-    # Возвращаем обратно матрицу вида в шейдере по умолчанию:
-    RenderPipeline.default_shader.begin()
-    RenderPipeline.default_shader.set_uniform("u_view", self.view)
-    RenderPipeline.default_shader.end()
-    */
-    return;
+    if (!self || !self->_ui_begin_) return;
+    self->_ui_begin_ = false;
+
+    // Возвращаем обратно матрицу вида в шейдере по умолчанию:
+    ShaderProgram *shader = self->window->renderer->default_shader;
+    shader->begin(shader);
+    shader->set_uniform_mat4(shader, "u_view", self->view);
+    shader->end(shader);
 }

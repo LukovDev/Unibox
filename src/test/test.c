@@ -88,7 +88,7 @@ void update(Window *self, Input *input, float dtime) {
     printf("Update called. FPS %f\n", self->get_current_fps(self));
     if (self->get_is_focused(self)) {
         printf("Focused\n");
-        self->set_fps(self, 0);
+        self->set_fps(self, 10);
     }
     if (self->get_is_defocused(self)) {
         printf("Defocused\n");
@@ -172,8 +172,8 @@ void render(Window *self, Renderer *render, float dtime) {
     glm_rotate(model, glm_rad(g*360.0f), (vec3){0.0f, 1.0f, 0.0f});
     glm_rotate(model, glm_rad(r*360.0f), (vec3){1.0f, 0.0f, 0.0f});
     glm_rotate(model, glm_rad(b*360.0f), (vec3){0.0f, 0.0f, 1.0f});
-    // texture->begin(texture);
-    // glActiveTexture(GL_TEXTURE1);
+    texture->begin(texture);
+    glActiveTexture(GL_TEXTURE1);
     render->default_shader->set_uniform_vec4(render->default_shader, "u_color", (Vec4f){r, g, b, 1.0f});
     render->default_shader->set_uniform_mat4(render->default_shader, "u_model", model);
     // render->default_shader->set_uniform_bool(render->default_shader, "u_use_texture", true);

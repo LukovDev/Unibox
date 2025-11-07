@@ -61,7 +61,7 @@ static void RendererGL_Impl_clear(Renderer *self, float r, float g, float b, flo
 static void RendererGL_Impl_buffers_flush(Renderer *self);
 static void RendererGL_Impl_camera2d_update(Renderer *self);
 static void RendererGL_Impl_camera3d_update(Renderer *self);
-static void RendererGL_Impl_viewport_resize(Renderer *self, int width, int height);
+static void RendererGL_Impl_viewport_resize(Renderer *self, int x, int y, int width, int height);
 
 
 // Регистрируем функции реализации апи:
@@ -217,6 +217,6 @@ static void RendererGL_Impl_camera3d_update(Renderer *self) {
 }
 
 
-static void RendererGL_Impl_viewport_resize(Renderer *self, int width, int height) {
-    glViewport(0, 0, width, height);
+static void RendererGL_Impl_viewport_resize(Renderer *self, int x, int y, int width, int height) {
+    glViewport(x, y, width, height);
 }

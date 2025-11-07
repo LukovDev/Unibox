@@ -6,6 +6,7 @@
 
 
 // Подключаем:
+#include <stdbool.h>
 #include "../math.h"
 
 
@@ -16,11 +17,12 @@ typedef struct Window Window;
 
 // Структура 2D камеры:
 typedef struct Camera2D {
-    Window *window;  // Указатель на окно.
-    Vec2d position;  // Позиция камеры.
-    float angle;     // Угол наклона камеры.
-    float zoom;      // Масштаб камеры.
-    float meter;     // Масштаб единицы измерения.
+    Window *window;   // Указатель на окно.
+    Vec2d position;   // Позиция камеры.
+    float angle;      // Угол наклона камеры.
+    float zoom;       // Масштаб камеры.
+    float meter;      // Масштаб единицы измерения.
+    bool _ui_begin_;  // Отрисовывается ли интерфейс.
 
     mat4 view;  // Матрица вида.
     mat4 proj;  // Матрица проекции.
